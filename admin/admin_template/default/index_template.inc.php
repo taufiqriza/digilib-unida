@@ -28,6 +28,9 @@
     <link href="<?php echo JWB; ?>jquery.imgareaselect/css/imgareaselect-default.css" rel="stylesheet" type="text/css" />
     <link href="<?php echo JWB; ?>datepicker/css/datepicker-bs4.min.css" rel="stylesheet" />
     <link href="<?php echo $sysconf['admin_template']['css'].'?'.date('this'); ?>" rel="stylesheet" type="text/css" />
+    <!-- Modern Theme -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="<?php echo AWB; ?>admin_template/<?php echo $sysconf['admin_template']['theme']?>/css/modern-theme.css?v=<?php echo date('YmdHis'); ?>" rel="stylesheet" type="text/css" />
 
     <script type="text/javascript" src="<?php echo JWB; ?>jquery.js"></script>
     <script type="text/javascript" src="<?php echo AWB; ?>admin_template/<?php echo $sysconf['admin_template']['theme']?>/vendor/slimscroll/jquery.slimscroll.min.js"></script>
@@ -75,6 +78,7 @@
 </header>
     
 <nav id="sidepan">
+<?php @include __DIR__ . '/sidebar_brand.inc.php'; ?>
     <div class="s-user" id="profile">
         <div class="s-user-frame">
             <a href="<?php echo MWB.'system/app_user.php?changecurrent=true&action=detail'; ?>" class="s-user-photo subMenuItem">
@@ -177,5 +181,6 @@ $('.s-close').click(function(e){
   });
 </script>
 <?php include "chat.php" ?>
+<script type="text/javascript" src="<?php echo AWB; ?>admin_template/<?php echo $sysconf['admin_template']['theme']?>/js/modern-admin.js?v=<?php echo date('YmdHis'); ?>"></script>
 </body>
 </html>
