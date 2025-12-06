@@ -65,36 +65,95 @@ function confirmProcess(intReserveID, strTitle)
 </script>
 <!--reserve specific javascript functions end-->
 
-<div style="padding: 20px;">
-  <!--item loan form-->
-  <div class="s-circulation__reserve" style="background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(31, 59, 179, 0.1); border: 2px solid rgba(31, 59, 179, 0.1);">
-    <form name="reserveForm" id="search" action="circulation_action.php" method="post" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-      <label style="font-weight: 600; color: #1f3bb3; min-width: 140px;"><i class="fas fa-search"></i> <?php echo __('Search Collection'); ?></label>
-      <?php
-      // AJAX expression
-      $ajax_exp = "ajaxFillSelect('item_AJAX_lookup_handler.php', 'item', 'i.item_code:title', 'reserveItemID', $('#bib_search_str').val())";
-      $biblio_options[] = array('0', 'Title');
-      echo simbio_form_element::textField('text', 'bib_search_str', '', 'class="form-control" style="flex: 1; min-width: 200px;" oninput="'.$ajax_exp.'" placeholder="Search by title..."');
-      echo simbio_form_element::selectList('reserveItemID', $biblio_options, '', 'class="form-control" style="flex: 1; min-width: 200px;"');
-      ?>
-      <button type="submit" name="addReserve" class="s-btn btn btn-primary" style="white-space: nowrap;">
-        <i class="fas fa-bookmark"></i> <?php echo __('Add Reserve'); ?>
-      </button>
-    </form>
-  </div>
-  <!--item loan form end-->
+<?php
+// Get reservation stats for member if available
+$memberID = isset($_SESSION['memberID']) ? trim($_SESSION['memberID']) : '';
+$reserve_count = 0;
+if ($memberID) {
+    $reserve_count_q = $dbs->query("SELECT COUNT(*) FROM reserve WHERE member_id='".$dbs->escape_string($memberID)."'");
+    $reserve_count = $reserve_count_q->fetch_row()[0];
+}
+?>
+
+<div class="circulation-workspace">
+    <!-- Workspace Header Hero -->
+    <div class="workspace-hero">
+        <div class="workspace-hero__icon">
+            <i class="fas fa-bookmark"></i>
+        </div>
+        <div class="workspace-hero__text">
+            <h2><?php echo __('Reservations'); ?></h2>
+            <p><?php echo __('Member Collection Reservation Management'); ?></p>
+        </div>
+        <div class="workspace-hero__stats">
+            <div class="workspace-stat">
+                <div class="workspace-stat__value"><?php echo $reserve_count; ?></div>
+                <div class="workspace-stat__label"><?php echo __('Reserved'); ?></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workspace Surface -->
+    <div class="workspace-surface">
+        <div class="workspace-section">
+            <div class="workspace-section__header">
+                <h3><i class="fas fa-plus-circle"></i> <?php echo __('Add Reservation'); ?></h3>
+                <p><?php echo __('Search and reserve available collections'); ?></p>
+            </div>
+
+            <!--item loan form-->
+            <div class="workspace-form-card">
+                <form name="reserveForm" id="search" action="circulation_action.php" method="post" class="workspace-form">
+                    <div class="workspace-form-group">
+                        <label class="workspace-label">
+                            <i class="fas fa-search"></i> <?php echo __('Search Collection'); ?>
+                        </label>
+                        <?php
+                        // AJAX expression
+                        $ajax_exp = "ajaxFillSelect('item_AJAX_lookup_handler.php', 'item', 'i.item_code:title', 'reserveItemID', $('#bib_search_str').val())";
+                        $biblio_options[] = array('0', 'Title');
+                        echo simbio_form_element::textField('text', 'bib_search_str', '', 'class="form-control workspace-input" oninput="'.$ajax_exp.'" placeholder="'.__('Search by title...').'"');
+                        ?>
+                    </div>
+
+                    <div class="workspace-form-group">
+                        <label class="workspace-label">
+                            <i class="fas fa-book"></i> <?php echo __('Select Item'); ?>
+                        </label>
+                        <?php
+                        echo simbio_form_element::selectList('reserveItemID', $biblio_options, '', 'class="form-control workspace-input"');
+                        ?>
+                    </div>
+
+                    <div class="workspace-actions">
+                        <button type="submit" name="addReserve" class="workspace-btn workspace-btn--primary">
+                            <i class="fas fa-bookmark"></i>
+                            <span><?php echo __('Add Reservation'); ?></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!--item loan form end-->
 
 <?php
 // check if there is member ID
 if (isset($_SESSION['memberID'])) {
     $memberID = trim($_SESSION['memberID']);
+    ?>
+
+    <div class="workspace-section__header" style="margin-top: 32px;">
+        <h3><i class="fas fa-list"></i> <?php echo __('Your Reservations'); ?></h3>
+        <p><?php echo __('List of your current collection reservations'); ?></p>
+    </div>
+
+    <?php
     $reserve_list_q = $dbs->query("SELECT r.*, b.title FROM reserve AS r
         LEFT JOIN biblio AS b ON r.biblio_id=b.biblio_id
         WHERE r.member_id='$memberID'");
 
     // create table object
     $reserve_list = new simbio_table();
-    $reserve_list->table_attr = 'class="s-table table" style="width: 100%;"';
+    $reserve_list->table_attr = 'id="dataList" class="s-table table" style="width: 100%;"';
     $reserve_list->table_header_attr = 'class="dataListHeader" style="font-weight: bold;"';
     $reserve_list->highlight_row = true;
     // table header
@@ -150,7 +209,9 @@ if (isset($_SESSION['memberID'])) {
     echo '<form name="reserveHiddenForm" method="post" action="circulation_action.php"><input type="hidden" name="process" value="delete" /><input type="hidden" name="reserveID" value="" /></form>';
 }
 ?>
-</div>
+        </div><!-- workspace-section -->
+    </div><!-- workspace-surface -->
+</div><!-- circulation-workspace -->
 
 <?php
 // get the buffered content

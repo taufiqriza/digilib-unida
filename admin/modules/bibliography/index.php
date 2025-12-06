@@ -2401,7 +2401,21 @@ if (isset($_GET['action']) && $_GET['action'] == 'history') {
     }
 
     $form->addAnything(__('Image'), $str_input);
-    
+
+    // biblio attachment/digital files
+    if (!$in_pop_up) {
+        if ($form->edit_mode) {
+            // Edit mode: show button and iframe with existing attachments
+            $str_input = '<div class="s-margin__bottom-1"><a class="s-btn btn btn-primary notAJAX openPopUp" width="900" height="600" href="' . MWB . 'bibliography/pop_attach.php?biblioID=' . $rec_d['biblio_id'] . '" title="' . __('Digital Content/Attachment') . '" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; padding: 8px 16px; border-radius: 6px; color: white; font-weight: 600;"><i class="fa fa-upload"></i> ' . __('Add Digital Content/Attachment') . '</a></div>';
+            $str_input .= '<iframe name="attachIframe" id="attachIframe" class="form-control" style="width: 100%; height: 120px; border: 1px solid #e5e7eb; border-radius: 8px;" src="' . MWB . 'bibliography/iframe_attach.php?biblioID=' . $rec_d['biblio_id'] . '&block=1"></iframe>' . "\n";
+        } else {
+            // Add new mode: show button and iframe for session-based attachments
+            $str_input = '<div class="s-margin__bottom-1"><a class="s-btn btn btn-primary notAJAX openPopUp" width="900" height="600" href="' . MWB . 'bibliography/pop_attach.php" title="' . __('Digital Content/Attachment') . '" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; padding: 8px 16px; border-radius: 6px; color: white; font-weight: 600;"><i class="fa fa-upload"></i> ' . __('Add Digital Content/Attachment') . '</a></div>';
+            $str_input .= '<iframe name="attachIframe" id="attachIframe" class="form-control" style="width: 100%; height: 120px; border: 1px solid #e5e7eb; border-radius: 8px;" src="' . MWB . 'bibliography/iframe_attach.php"></iframe>' . "\n";
+        }
+        $form->addAnything(__('Digital Content/Attachment'), $str_input);
+    }
+
     if (isset($biblio_custom_fields)) {
         if (is_array($biblio_custom_fields) && $biblio_custom_fields) {
             foreach ($biblio_custom_fields as $fid => $cfield) {

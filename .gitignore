@@ -11,12 +11,34 @@ files/*
 repository/*
 config/*
 cache/*
+# macOS
 .DS_Store
 ._.*
 ._*
+
+# IDE/Editor
 .project
 .idea
 .vscode
+*.sublime-project
+*.sublime-workspace
+
+# Dev server configs
+fiveserver.config.js
+*.local.js
+
+# Backup files
+*.old
+*.bak
+*.backup
+*.zip
+
+# Temp hotfix docs (keep docs/ folder clean)
+HOTFIX_*.md
+FIX_*.md
+PERBAIKAN_*.md
+CHANGELOG_*.md
+*_FINAL.md
 sysconfig.local.inc.php
 config/sysconfig.local.inc.php
 sysconfig.inc.php

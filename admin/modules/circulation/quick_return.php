@@ -120,24 +120,38 @@ echo $barcode;
               <label class="workspace-label">
                 <i class="fas fa-box"></i> <?php echo __('Item ID / Barcode'); ?>
               </label>
-              <input type="text" name="quickReturnID" id="quickReturnID" class="form-control workspace-input" placeholder="Scan or type item barcode..." autofocus />
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <input type="text" name="quickReturnID" id="quickReturnID" class="form-control workspace-input" placeholder="<?php echo __('Scan or type item barcode...'); ?>" autofocus />
+                <button type="submit" id="quickReturnProcess" class="workspace-btn workspace-btn--primary" style="white-space: nowrap; flex-shrink: 0;">
+                  <i class="fas fa-check-circle"></i>
+                  <span><?php echo __('Process Return'); ?></span>
+                </button>
+              </div>
             </div>
 
-            <div class="workspace-actions">
-              <button type="submit" id="quickReturnProcess" class="workspace-btn workspace-btn--primary">
-                <i class="fas fa-check-circle"></i>
-                <span><?php echo __('Process Return'); ?></span>
-              </button>
-              <?php if($sysconf['barcode_reader']) : ?>
+            <?php if($sysconf['barcode_reader']) : ?>
+            <div class="workspace-actions" style="margin-top: 8px;">
               <a class="workspace-btn workspace-btn--secondary notAJAX" id="barcodeReader" href="<?php echo MWB.'circulation/barcode_reader.php?mode=quickreturn' ?>">
                 <i class="fas fa-barcode"></i>
                 <span><?php echo __('Open Barcode Reader (F8)'); ?></span>
               </a>
-              <?php endif ?>
             </div>
+            <?php endif ?>
           </form>
           <iframe name="circAction" id="circAction" style="display: inline; width: 5px; height: 5px; visibility: hidden;"></iframe>
         </div>
+
+        <style>
+          /* Responsive layout for form with inline button */
+          @media (max-width: 768px) {
+            .workspace-form-group > div[style*="display: flex"] {
+              flex-direction: column !important;
+            }
+            .workspace-form-group .workspace-btn {
+              width: 100% !important;
+            }
+          }
+        </style>
 
         <!-- Return Result Area -->
         <div id="circulationLayer" style="margin-top: 20px;"></div>

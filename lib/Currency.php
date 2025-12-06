@@ -51,6 +51,15 @@ class Currency
         {
             foreach ($custom['detail']??[] as $property => $data) {
                 foreach ($data as $const => $value) {
+                    // Validate value - ensure it's numeric for setAttribute
+                    if ($property === 'attribute') {
+                        // For setAttribute, value must be int or float
+                        if (!is_numeric($value)) {
+                            // Skip non-numeric values or convert to 0
+                            continue;
+                        }
+                        $value = is_float($value) ? (float)$value : (int)$value;
+                    }
                     call_user_func_array([$this->formatter, 'set' . ucfirst($property)], [constant('\NumberFormatter::'. $const), $value]);
                 }
             }

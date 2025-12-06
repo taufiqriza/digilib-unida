@@ -75,7 +75,14 @@ class module extends simbio
             foreach ($this->module_list as $_module) {
                 $_formated_module_name = ucwords(str_replace('_', ' ', $_module['name']));
                 $_mod_dir = $_module['path'];
-                $_menu .= '<li><a class="menu ' . $_module['name'] . ((isset($_GET['mod']) && $_GET['mod'] == $_module['path']) ? ' menuCurrent' : '') . '" title="' . $_module['desc'] . '" href="index.php?mod=' . $_mod_dir . '"><span>' . __($_formated_module_name) . '</span></a></li>';
+                $_label = __($_formated_module_name);
+
+                $_badge = '';
+                $new_badge_modules = array('bibliography', 'circulation');
+                if (in_array($_module['name'], $new_badge_modules) || in_array($_module['path'], $new_badge_modules)) {
+                    $_badge = '<span class="menu-badge menu-badge--green">' . __('NEW') . '</span>';
+                }
+                $_menu .= '<li><a class="menu ' . $_module['name'] . ((isset($_GET['mod']) && $_GET['mod'] == $_module['path']) ? ' menuCurrent' : '') . '" title="' . $_module['desc'] . '" href="index.php?mod=' . $_mod_dir . '"><span>' . $_badge . $_label . '</span></a></li>';
             }
         }
         $_menu .= $this->appended_last;

@@ -8,15 +8,15 @@
    ROOT VARIABLES - Blue Color Scheme
    ======================================== */
 :root {
-    /* Blue color scheme from bibliography */
-    --primary-gradient: linear-gradient(135deg, #1f3bb3 0%, #5563de 100%);
+    /* Blue color scheme matching Circulation Analytics */
+    --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     --success-gradient: linear-gradient(135deg, #10b981 0%, #3ccf91 100%);
     --danger-gradient: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
     --info-gradient: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
     --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
 
-    --primary-color: #1f3bb3;
-    --primary-hover: #182f8b;
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
     --success-color: #10b981;
     --danger-color: #dc2626;
     --info-color: #0891b2;
@@ -70,12 +70,12 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    background: linear-gradient(118deg, #1f3bb3, #5563de 58%, #7b9dff);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 80%);
     border-radius: 18px;
     padding: 18px 24px;
     margin: 20px 20px 0 20px;
     color: #fff;
-    box-shadow: 0 12px 28px rgba(31, 59, 179, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     position: relative;
     overflow: hidden;
 }
@@ -215,7 +215,7 @@
     border-radius: 16px;
     padding: 20px 24px;
     margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(31, 59, 179, 0.04);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.04);
 }
 
 .workspace-form {
@@ -255,13 +255,13 @@
     color: var(--text-dark);
     background: #fff;
     transition: var(--transition-normal);
-    box-shadow: 0 2px 4px rgba(31, 59, 179, 0.04);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.04);
 }
 
 .workspace-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(31, 59, 179, 0.1), 0 4px 12px rgba(31, 59, 179, 0.15);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 /* Workspace Actions Buttons */
@@ -286,7 +286,7 @@
     border: none;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 8px 20px rgba(31, 59, 179, 0.25);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
 }
 
 .workspace-btn::before {
@@ -310,9 +310,9 @@
 }
 
 .workspace-btn--primary:hover {
-    background: linear-gradient(135deg, #182f8b, #4451c4);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(31, 59, 179, 0.35);
+    box-shadow: 0 12px 28px rgba(59, 130, 246, 0.35);
 }
 
 .workspace-btn--secondary {
@@ -362,7 +362,7 @@
     border-radius: 14px;
     text-decoration: none;
     transition: var(--transition-normal);
-    box-shadow: 0 2px 8px rgba(31, 59, 179, 0.06);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.06);
     position: relative;
     overflow: hidden;
 }
@@ -381,7 +381,7 @@
 
 .quick-action-card:hover {
     transform: translateX(4px);
-    box-shadow: 0 8px 20px rgba(31, 59, 179, 0.12);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12);
     border-color: var(--primary-color);
 }
 
@@ -594,11 +594,11 @@
 .btn:hover,
 .btn:focus {
     transform: translateY(-1px);
-    box-shadow: 0 16px 28px rgba(31, 59, 179, 0.28);
+    box-shadow: 0 16px 28px rgba(59, 130, 246, 0.28);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #182f8b, #4451c4);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 
 .btn-default:hover {
@@ -662,7 +662,7 @@
     outline: none;
     border-color: var(--primary-color);
     background: var(--bg-white);
-    box-shadow: 0 0 0 3px rgba(76, 96, 223, 0.18);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
 }
 
 .ajaxInputField {
@@ -926,7 +926,7 @@
 
 .nav-link:hover {
     color: var(--primary-color);
-    background: rgba(31, 59, 179, 0.08);
+    background: rgba(59, 130, 246, 0.08);
 }
 
 .nav-link.active {
@@ -1028,10 +1028,10 @@
 
 @keyframes glow {
     0%, 100% {
-        box-shadow: 0 0 5px rgba(31, 59, 179, 0.3), 0 0 10px rgba(31, 59, 179, 0.2);
+        box-shadow: 0 0 5px rgba(59, 130, 246, 0.3), 0 0 10px rgba(59, 130, 246, 0.2);
     }
     50% {
-        box-shadow: 0 0 10px rgba(31, 59, 179, 0.5), 0 0 20px rgba(31, 59, 179, 0.3);
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
     }
 }
 
@@ -1102,7 +1102,7 @@
 .workspace-btn:active,
 .btn:active {
     transform: translateY(0) !important;
-    box-shadow: 0 4px 12px rgba(31, 59, 179, 0.2) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
 }
 
 /* Loading State */
@@ -1151,7 +1151,7 @@
 
 .workspace-form-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(31, 59, 179, 0.08);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.08);
 }
 
 /* Progressive Enhancement for Inputs */
@@ -1210,7 +1210,7 @@
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(31, 59, 179, 0.1);
+    background: rgba(59, 130, 246, 0.1);
     transform: translate(-50%, -50%);
     transition: width 0.6s, height 0.6s;
 }
@@ -1268,7 +1268,7 @@
 }
 
 .dateChange:hover {
-    background: rgba(31, 59, 179, 0.08);
+    background: rgba(59, 130, 246, 0.08);
     text-decoration: none;
 }
 
@@ -1282,7 +1282,7 @@
 
 .dateChangeInput:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(76, 96, 223, 0.18);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
 }
 
 /* ========================================
@@ -1455,7 +1455,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #182f8b, #4451c4);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 
 /* ========================================

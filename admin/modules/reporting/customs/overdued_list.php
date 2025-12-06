@@ -59,9 +59,13 @@ if (isset($_GET['reportView'])) {
 }
 
 if (!$reportView) {
-    // Get today's overdues count
+    // Get today's overdues count and stats
     $overdue_count_q = $dbs->query("SELECT COUNT(*) FROM loan WHERE is_lent=1 AND is_return=0 AND due_date < CURDATE()");
     $overdue_count = $overdue_count_q->fetch_row()[0];
+
+    // Get unique members with overdues
+    $overdue_members_q = $dbs->query("SELECT COUNT(DISTINCT member_id) FROM loan WHERE is_lent=1 AND is_return=0 AND due_date < CURDATE()");
+    $overdue_members = $overdue_members_q->fetch_row()[0];
     ?>
     <!-- Include modern CSS and Font Awesome -->
     <link rel="stylesheet" href="<?php echo MWB; ?>circulation/circulation-modern.css">
@@ -78,10 +82,14 @@ if (!$reportView) {
           <h2><?php echo __('Overdue List'); ?></h2>
           <p><?php echo __('Library Overdued Items Report'); ?></p>
         </div>
-        <div class="workspace-hero__stats">
-          <div class="workspace-stat">
-            <div class="workspace-stat__value"><?php echo $overdue_count; ?></div>
-            <div class="workspace-stat__label"><?php echo __('Overdue'); ?></div>
+        <div class="workspace-hero__stats" style="display: flex; gap: 20px;">
+          <div class="workspace-stat" style="text-align: center;">
+            <div class="workspace-stat__value" style="font-size: 32px; font-weight: 700; color: #dc3545;"><?php echo $overdue_count; ?></div>
+            <div class="workspace-stat__label" style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo __('Items'); ?></div>
+          </div>
+          <div class="workspace-stat" style="text-align: center;">
+            <div class="workspace-stat__value" style="font-size: 32px; font-weight: 700; color: #ff6b6b;"><?php echo $overdue_members; ?></div>
+            <div class="workspace-stat__label" style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo __('Members'); ?></div>
           </div>
         </div>
       </div>
@@ -146,17 +154,159 @@ if (!$reportView) {
             background: #f8f9fa !important;
         }
 
-        /* Table row hover effect */
-        .dataListPrinted tr:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.12) !important;
+        /* Table row hover effect - enhanced */
+        #reportView table tbody tr:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+            border-left-width: 4px !important;
+        }
+
+        /* Smooth transitions for table elements */
+        #reportView table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        #reportView table tbody tr td {
+            transition: padding 0.2s ease;
+        }
+
+        /* Button hover effects */
+        #reportView table tbody tr td a.btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(37,211,102,0.5) !important;
+        }
+
+        /* Badge pulse effect on hover */
+        #reportView table tbody tr:hover span[style*="background: linear-gradient(135deg, #ffeaa7"] {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+
+        /* Scrollbar styling for table container */
+        #reportView {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+
+        #reportView::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        #reportView::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 4px;
+        }
+
+        #reportView::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+
+        #reportView::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
         }
 
         /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            #reportView table {
+                font-size: 11px !important;
+            }
+            #reportView table th,
+            #reportView table td {
+                padding: 8px 10px !important;
+            }
+        }
+
         @media (max-width: 768px) {
             .biblio-search-content form > div:first-child {
                 grid-template-columns: 1fr !important;
             }
+            .workspace-hero__stats {
+                flex-direction: column;
+                gap: 10px !important;
+            }
+            #reportView table {
+                font-size: 10px !important;
+            }
+            #reportView table th,
+            #reportView table td {
+                padding: 6px 8px !important;
+            }
+            /* Stack member info on mobile */
+            #reportView > div > div[style*="background: linear-gradient(135deg, #fff5f5"] > div:first-child {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            #reportView > div > div[style*="background: linear-gradient(135deg, #fff5f5"] > div:first-child > div:last-child {
+                width: 100%;
+                justify-content: flex-start !important;
+            }
+        }
+
+        /* Hide record count info, print button, and table header - comprehensive */
+        #reportView .info,
+        #reportView .infoBox,
+        #reportView .printPageInfo,
+        #reportView .s-print__page-info,
+        #reportView div[style*="background-color: #d5e5f7"],
+        #reportView div[style*="background: #d5e5f7"],
+        #reportView div[style*="background-color:#d5e5f7"],
+        #reportView > div > div:first-child,
+        #reportView table.dataListPrinted > thead > tr:first-child,
+        iframe[name="reportView"] + div > div:first-child {
+            display: none !important;
+        }
+
+        /* Remove padding from iframe content */
+        #reportView > div,
+        #reportView body > div:first-child {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+
+        /* Hide any blue info boxes and print buttons */
+        #reportView div[class*="info"],
+        #reportView div[class*="Info"],
+        #reportView a[class*="printReport"],
+        #reportView .printReport {
+            display: none !important;
+        }
+
+        /* Force hide the first div that contains record info */
+        #reportView > div > div:first-of-type {
+            display: none !important;
+        }
+
+        /* Print styles */
+        @media print {
+            #reportView table {
+                font-size: 9px !important;
+            }
+            #reportView table tbody tr {
+                page-break-inside: avoid;
+            }
+            .workspace-hero,
+            .biblio-search-card,
+            .paging-area {
+                display: none !important;
+            }
+        }
+
+        /* Loading animation */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .loading-shimmer {
+            animation: shimmer 2s infinite;
+            background: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+            background-size: 1000px 100%;
         }
     </style>
     <script>
@@ -180,11 +330,28 @@ if (!$reportView) {
                     $(this).find('.toggle-icon').css('transform', 'rotate(180deg)');
                 }
             });
+
+            // Add loading indicator for iframe
+            const iframe = document.getElementById('reportView');
+            const loadingIndicator = $('<div class="text-center" style="padding: 40px; color: #666;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #1f3bb3; margin-bottom: 10px;"></i><div style="font-size: 14px; font-weight: 500;">Loading overdue data...</div></div>');
+
+            iframe.addEventListener('load', function() {
+                loadingIndicator.fadeOut();
+            });
+
+            // Add smooth scroll to results
+            $('button[name="applyFilter"]').click(function() {
+                setTimeout(function() {
+                    $('html, body').animate({
+                        scrollTop: $('#reportView').offset().top - 20
+                    }, 500);
+                }, 100);
+            });
         })
     </script>
-    <div class="paging-area" style="padding: 0 20px;"><div class="pb-3 pr-3" id="pagingBox"></div></div>
     <iframe name="reportView" id="reportView" src="<?php echo $_SERVER['PHP_SELF'] . '?reportView=true'; ?>"
-            frameborder="0" style="width: 100%; min-height: 600px; border: none; background: #fff; border-radius: 8px;"></iframe>
+            frameborder="0" style="width: 100%; min-height: 600px; border: none; background: #fff; border-radius: 8px; margin-bottom: 20px;"></iframe>
+    <div class="paging-area" style="padding: 0 20px;"><div class="pb-3 pr-3" id="pagingBox"></div></div>
   <?php
 } else {
     ob_start();
@@ -305,39 +472,96 @@ if (!$reportView) {
 
         $ovd_title_q = $obj_db->query($ovd_sql);
 
-        // Modern card design for member info
-        $_buffer = '<div style="background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%); border-left: 4px solid #dc3545; border-radius: 8px; padding: 16px; margin: 10px 0 16px 0; box-shadow: 0 2px 4px rgba(220,53,69,0.1);">';
-        $_buffer .= '<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">';
-        $_buffer .= '<div style="background: #dc3545; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">' . substr($member_name, 0, 1) . '</div>';
-        $_buffer .= '<div style="flex: 1;">';
-        $_buffer .= '<div style="font-weight: 600; color: #333; font-size: 15px;">' . $member_name . '</div>';
-        $_buffer .= '<div style="color: #666; font-size: 13px;">ID: ' . $array_data[0] . '</div>';
-        $_buffer .= '</div>';
-        $_buffer .= '</div>';
+        // Calculate totals for this member
+        $total_items = $ovd_title_q->num_rows;
+        $total_fines = 0;
+        $max_overdue_days = 0;
 
-        if (!empty($member_mail_address)) $_buffer .= '<div style="font-size: 13px; color: #555; margin-bottom: 6px;"><i class="fas fa-map-marker-alt" style="color: #dc3545; width: 16px;"></i> ' . htmlspecialchars($member_mail_address) . '</div>';
-        if (!empty($member_email)) {
-            $_buffer .= '<div style="font-size: 13px; color: #555; margin-bottom: 6px;"><i class="fas fa-envelope" style="color: #dc3545; width: 16px;"></i> ' . htmlspecialchars($member_email) . '</div>';
-            $_buffer .= '<div id="' . $array_data[0] . 'emailStatus" style="margin-bottom: 8px;"></div>';
+        // Store results for display
+        $overdue_items = [];
+        while ($row = $ovd_title_q->fetch_assoc()) {
+            $overdue_items[] = $row;
+
+            // Calculate overdue days
+            $overdue_days = intval($row['overdue_days']);
+            if ($overdue_days > $max_overdue_days) {
+                $max_overdue_days = $overdue_days;
+            }
+
+            // Calculate fine
+            $fine_from_rule = $row['fine_each_day'];
+            if (is_numeric($fine_from_rule) && floatval($fine_from_rule) > 0) {
+                $fine_per_day = floatval($fine_from_rule);
+            } else {
+                $fine_per_day = floatval($member_fine_per_day);
+            }
+            $total_fines += floatval($overdue_days) * floatval($fine_per_day);
         }
-        if (!empty($member_phone)) $_buffer .= '<div style="font-size: 13px; color: #555; margin-bottom: 10px;"><i class="fas fa-phone" style="color: #dc3545; width: 16px;"></i> ' . htmlspecialchars($member_phone) . '</div>';
 
+        // Modern compact horizontal card design for member info
+        $_buffer = '<div style="background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%); border-left: 4px solid #dc3545; border-radius: 8px; padding: 14px 16px; margin: 10px 0 14px 0; box-shadow: 0 2px 4px rgba(220,53,69,0.1);">';
+
+        // Header row with avatar, name, summary stats, and email button - all in one line
+        $_buffer .= '<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px;">';
+
+        // Left side: Avatar and name with contact info
+        $_buffer .= '<div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">';
+        $_buffer .= '<div style="background: #dc3545; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; flex-shrink: 0;">' . substr($member_name, 0, 1) . '</div>';
+        $_buffer .= '<div style="min-width: 0; flex: 1;">';
+        $_buffer .= '<div style="font-weight: 600; color: #333; font-size: 14px; margin-bottom: 4px;">' . $member_name . '</div>';
+
+        // ID, Phone, Email in one line - compact horizontal
+        $_buffer .= '<div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 10px; color: #666; align-items: center;">';
+        $_buffer .= '<div style="display: flex; align-items: center; gap: 4px;"><span style="font-weight: 500;">ID:</span> <span style="font-family: monospace; background: #fff; padding: 2px 6px; border-radius: 3px; font-size: 10px;">' . $array_data[0] . '</span></div>';
+
+        if (!empty($member_phone)) {
+            $_buffer .= '<div style="display: flex; align-items: center; gap: 4px;"><i class="fas fa-phone" style="color: #dc3545; font-size: 9px;"></i><span>' . htmlspecialchars($member_phone) . '</span></div>';
+        }
         if (!empty($member_email)) {
-            $_buffer .= '<a class="usingAJAX btn btn-sm btn-danger" href="' . MWB . 'membership/overdue_mail.php' . '" postdata="memberID=' . $array_data[0] . '" loadcontainer="' . $array_data[0] . 'emailStatus" style="text-decoration: none;"><i class="fa fa-paper-plane"></i> ' . __('Send Email Notification') . '</a>';
+            $_buffer .= '<div style="display: flex; align-items: center; gap: 4px;"><i class="fas fa-envelope" style="color: #dc3545; font-size: 9px;"></i><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;" title="' . htmlspecialchars($member_email) . '">' . htmlspecialchars($member_email) . '</span></div>';
+        }
+
+        $_buffer .= '</div>';
+        $_buffer .= '</div>';
+        $_buffer .= '</div>';
+
+        // Right side: Summary stats badges + email button
+        $_buffer .= '<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0;">';
+        $_buffer .= '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(102,126,234,0.3); white-space: nowrap;"><i class="fas fa-book"></i> <span>' . $total_items . ' ' . ($total_items > 1 ? __('Items') : __('Item')) . '</span></div>';
+        $_buffer .= '<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(245,87,108,0.3); white-space: nowrap;"><i class="fas fa-money-bill-wave"></i> <span>' . currency($total_fines) . '</span></div>';
+        $_buffer .= '<div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(250,112,154,0.3); white-space: nowrap;"><i class="fas fa-clock"></i> <span>' . $max_overdue_days . ' ' . __('days') . '</span></div>';
+
+        // Email button
+        if (!empty($member_email)) {
+            $_buffer .= '<a class="usingAJAX btn btn-sm" href="' . MWB . 'membership/overdue_mail.php' . '" postdata="memberID=' . $array_data[0] . '" loadcontainer="' . $array_data[0] . 'emailStatus" style="text-decoration: none; background: #dc3545; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(220,53,69,0.3); white-space: nowrap;"><i class="fa fa-paper-plane"></i> ' . __('Email') . '</a>';
         }
         $_buffer .= '</div>';
 
-        // Modern table design
-        $_buffer .= '<table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">';
-        $_buffer .= '<thead><tr style="background: #f8f9fa; color: #333; font-weight: 600; font-size: 13px;">';
-        $_buffer .= '<th style="padding: 10px; text-align: left; border-radius: 6px 0 0 6px;">' . __('Item Code') . '</th>';
-        $_buffer .= '<th style="padding: 10px; text-align: left;">' . __('Title') . '</th>';
-        $_buffer .= '<th style="padding: 10px; text-align: center;">' . __('Overdue') . '</th>';
-        $_buffer .= '<th style="padding: 10px; text-align: center;">' . __('Dates') . '</th>';
-        $_buffer .= '<th style="padding: 10px; text-align: center; border-radius: 0 6px 6px 0;">' . __('Action') . '</th>';
+        // Address in second row if exists (since it can be long)
+        if (!empty($member_mail_address)) {
+            $_buffer .= '<div style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: #666; margin-top: 6px; padding-left: 50px;"><i class="fas fa-map-marker-alt" style="color: #dc3545; font-size: 9px; flex-shrink: 0;"></i><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' . htmlspecialchars($member_mail_address) . '">' . htmlspecialchars($member_mail_address) . '</span></div>';
+        }
+
+        // Email status container
+        if (!empty($member_email)) {
+            $_buffer .= '<div id="' . $array_data[0] . 'emailStatus" style="margin-top: 8px;"></div>';
+        }
+
+        $_buffer .= '</div>';
+
+        // Modern compact table design with horizontal layout
+        $_buffer .= '<table style="width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 13px;">';
+        $_buffer .= '<thead><tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">';
+        $_buffer .= '<th style="padding: 10px 12px; text-align: left; border-radius: 6px 0 0 6px; width: 10%;">' . __('Item Code') . '</th>';
+        $_buffer .= '<th style="padding: 10px 12px; text-align: left; width: 30%;">' . __('Title') . '</th>';
+        $_buffer .= '<th style="padding: 10px 12px; text-align: left; width: 12%;">' . __('Dates') . '</th>';
+        $_buffer .= '<th style="padding: 10px 12px; text-align: center; width: 10%;">' . __('Overdue') . '</th>';
+        $_buffer .= '<th style="padding: 10px 12px; text-align: center; width: 10%;">' . __('Fine') . '</th>';
+        $_buffer .= '<th style="padding: 10px 12px; text-align: center; width: 10%;">' . __('Price') . '</th>';
+        $_buffer .= '<th style="padding: 10px 12px; text-align: center; border-radius: 0 6px 6px 0; width: 10%;">' . __('Action') . '</th>';
         $_buffer .= '</tr></thead><tbody>';
 
-        while ($ovd_title_d = $ovd_title_q->fetch_assoc()) {
+        foreach ($overdue_items as $ovd_title_d) {
             //calculate Fines - use overdue_days from query
             $overdue_days = intval($ovd_title_d['overdue_days']);
 
@@ -372,16 +596,46 @@ if (!$reportView) {
             $item_price = is_numeric($ovd_title_d['price']) ? floatval($ovd_title_d['price']) : 0;
             $item_price_formatted = currency($item_price);
 
-            $_buffer .= '<tr style="background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: transform 0.2s;">';
-            $_buffer .= '<td style="padding: 12px; border-radius: 6px 0 0 6px; vertical-align: top;"><code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-size: 12px;">' . htmlspecialchars($ovd_title_d['item_code']) . '</code></td>';
-            $_buffer .= '<td style="padding: 12px; vertical-align: top;"><div style="font-weight: 500; color: #333; margin-bottom: 4px;">' . htmlspecialchars($ovd_title_d['title']) . '</div><div style="font-size: 12px; color: #666;"><i class="fas fa-tag" style="width: 14px;"></i> ' . __('Price') . ': ' . $item_price_formatted . '</div></td>';
-            $_buffer .= '<td style="padding: 12px; text-align: center; vertical-align: top;"><div style="background: #fff3cd; color: #856404; padding: 6px 10px; border-radius: 6px; font-weight: 600; margin-bottom: 6px; font-size: 13px;"><i class="fas fa-exclamation-triangle"></i> ' . $overdue_days_formatted . ' ' . __('days') . '</div><div style="background: #f8d7da; color: #721c24; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 13px;">' . __('Fine') . ': ' . $fines . '</div></td>';
-            $_buffer .= '<td style="padding: 12px; text-align: center; vertical-align: top; font-size: 12px;"><div style="margin-bottom: 4px;"><strong>' . __('Loan') . ':</strong> ' . $ovd_title_d['loan_date'] . '</div><div><strong>' . __('Due') . ':</strong> <span style="color: #dc3545;">' . $ovd_title_d['due_date'] . '</span></div></td>';
+            $_buffer .= '<tr style="background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.2s ease; border-left: 3px solid #dc3545;">';
 
+            // Item Code - more compact
+            $_buffer .= '<td style="padding: 10px 12px; border-radius: 6px 0 0 6px; vertical-align: middle;"><code style="background: #e8eaf6; color: #3f51b5; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block;">' . htmlspecialchars($ovd_title_d['item_code']) . '</code></td>';
+
+            // Title - compact single line with truncation
+            $_buffer .= '<td style="padding: 10px 12px; vertical-align: middle;"><div style="font-weight: 500; color: #333; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' . htmlspecialchars($ovd_title_d['title']) . '">' . htmlspecialchars($ovd_title_d['title']) . '</div></td>';
+
+            // Dates - horizontal compact format
+            $_buffer .= '<td style="padding: 10px 12px; vertical-align: middle; font-size: 11px; line-height: 1.6;">';
+            $_buffer .= '<div style="display: flex; flex-direction: column; gap: 2px;">';
+            $_buffer .= '<div><span style="color: #666; font-weight: 500;">Loan:</span> <span style="color: #333;">' . date('d/m/y', strtotime($ovd_title_d['loan_date'])) . '</span></div>';
+            $_buffer .= '<div><span style="color: #666; font-weight: 500;">Due:</span> <span style="color: #dc3545; font-weight: 600;">' . date('d/m/y', strtotime($ovd_title_d['due_date'])) . '</span></div>';
+            $_buffer .= '</div></td>';
+
+            // Overdue Days - compact badge
+            $_buffer .= '<td style="padding: 10px 12px; text-align: center; vertical-align: middle;"><span style="background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%); color: #d63031; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; display: inline-block; min-width: 50px; box-shadow: 0 2px 4px rgba(253,203,110,0.3);">' . $overdue_days_formatted . '</span><div style="font-size: 10px; color: #666; margin-top: 4px;">' . __('days') . '</div></td>';
+
+            // Fine - compact badge
+            $_buffer .= '<td style="padding: 10px 12px; text-align: center; vertical-align: middle;"><span style="background: linear-gradient(135deg, #ff7675 0%, #d63031 100%); color: #fff; padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 12px; display: inline-block; box-shadow: 0 2px 4px rgba(214,48,49,0.3);">' . $fines . '</span></td>';
+
+            // Price - compact
+            $_buffer .= '<td style="padding: 10px 12px; text-align: center; vertical-align: middle;"><span style="background: #f0f0f0; color: #555; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-block;">' . $item_price_formatted . '</span></td>';
+
+            // Action - compact button
             $wa_text = urlencode('Assalamualaikum ' . $member_name . ', kami ingin menyampaikan bahwa ada pinjaman buku dengan keterlambatan *' . $overdue_days_formatted . ' hari* di Perpustakaan. Kode Barcode: *' . $ovd_title_d['item_code'] . '*, Judul: *' . $ovd_title_d['title'] . '*. Tanggal harus kembali: ' . $ovd_title_d['due_date'] . '. Denda: ' . $fines . '. Terima Kasih. ' . $sysconf['library_name']);
-            $_buffer .= '<td style="padding: 12px; text-align: center; border-radius: 0 6px 6px 0; vertical-align: top;"><a class="btn btn-sm btn-success" href="https://wa.me/62' . preg_replace('/[^0-9]/', '', $member_phone) . '?text=' . $wa_text . '" target="_blank" style="white-space: nowrap; text-decoration: none;"><i class="fab fa-whatsapp"></i> WhatsApp</a></td>';
+            $_buffer .= '<td style="padding: 10px 12px; text-align: center; border-radius: 0 6px 6px 0; vertical-align: middle;"><a class="btn btn-sm" href="https://wa.me/62' . preg_replace('/[^0-9]/', '', $member_phone) . '?text=' . $wa_text . '" target="_blank" style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: #fff; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; box-shadow: 0 2px 4px rgba(37,211,102,0.3);"><i class="fab fa-whatsapp"></i> WA</a></td>';
             $_buffer .= '</tr>';
         }
+
+        // Add summary footer row if there are items
+        if (count($overdue_items) > 0) {
+            $_buffer .= '<tr style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); font-weight: 700; border-top: 2px solid #dee2e6;">';
+            $_buffer .= '<td colspan="4" style="padding: 10px 12px; text-align: right; border-radius: 6px 0 0 6px; font-size: 12px; color: #495057;">' . __('Total for this member') . ':</td>';
+            $_buffer .= '<td style="padding: 10px 12px; text-align: center; font-size: 12px; color: #495057;"><span style="background: #ffc107; color: #000; padding: 6px 12px; border-radius: 20px; font-weight: 700; display: inline-block;">' . number_format($max_overdue_days, 0, ',', '.') . '</span></td>';
+            $_buffer .= '<td style="padding: 10px 12px; text-align: center; font-size: 12px; color: #495057;"><span style="background: #dc3545; color: #fff; padding: 6px 10px; border-radius: 6px; font-weight: 700; display: inline-block;">' . currency($total_fines) . '</span></td>';
+            $_buffer .= '<td colspan="2" style="padding: 10px 12px; border-radius: 0 6px 6px 0; text-align: center; font-size: 11px; color: #6c757d;"><i class="fas fa-book"></i> ' . $total_items . ' ' . ($total_items > 1 ? __('items') : __('item')) . '</td>';
+            $_buffer .= '</tr>';
+        }
+
         $_buffer .= '</tbody></table>';
         return $_buffer;
     }

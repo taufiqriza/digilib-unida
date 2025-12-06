@@ -45,15 +45,14 @@ $can_write = utility::havePrivilege('stock_take', 'w');
 if (!($can_read AND $can_write)) {
     die('<div class="errorBox">'.__('You don\'t have enough privileges to access this area!').'</div>');
 }
-if ($_SESSION['uid'] != '1') {
-  die('<div class="errorBox">' . __('You must be an admin to run the completion process!') . '</div>');
-}
 // check if there is any active stock take proccess
 $stk_query = $dbs->query("SELECT * FROM stock_take WHERE is_active=1");
 if (!$stk_query->num_rows) {
     echo '<div class="errorBox">'.__('NO stock taking proccess running!').'</div>';
     die();
 }
+$activeData = $stk_query->fetch_assoc();
+mysqli_data_seek($stk_query, 0);
 
 if (isset($_POST['confirmFinish'])) {
   set_time_limit(0);
@@ -159,33 +158,120 @@ if (isset($_POST['confirmFinish'])) {
   }
   exit();
 } else {
+    $count_q = $dbs->query("SELECT 
+        SUM(CASE WHEN status='e' THEN 1 ELSE 0 END) AS scanned,
+        SUM(CASE WHEN status='m' THEN 1 ELSE 0 END) AS missing,
+        SUM(CASE WHEN status='l' THEN 1 ELSE 0 END) AS loan
+        FROM stock_take_item");
+    $counts = $count_q ? $count_q->fetch_assoc() : array('scanned'=>0,'missing'=>0,'loan'=>0);
+    $total = (int)($activeData['total_item_stock_taked'] ?? 0);
+    $progress = $total > 0 ? round(($counts['scanned'] / $total) * 100, 1) : 0;
 ?>
-<div class="menuBox">
-<div class="menuBoxInner errorIcon">
-	<div class="per_title">
-	    <h2><?php echo __('Finish Stock Take'); ?></h2>
-  </div>
-	<div class="infoBox">
-    <span class="important"><?php echo __('Are you sure to end current stock take proccess? Once it finished there is no way you can rollback this stock take'); ?></span>
-  </div>
-</div>
+<style>
+    .stock-finish {
+        font-family: 'Inter','Segoe UI',sans-serif;
+        background: #f8fafc;
+        padding: 32px;
+    }
+    .stock-finish__card {
+        background: #fff;
+        border-radius: 24px;
+        padding: 28px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 20px 45px -25px rgba(15,23,42,0.35);
+        max-width: 840px;
+        margin: 0 auto;
+    }
+    .stock-finish__header h1 {
+        margin: 0;
+        font-size: 26px;
+    }
+    .stock-finish__header p {
+        margin: 8px 0 0;
+        color: #475569;
+    }
+    .stock-finish__stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+        gap: 14px;
+        margin: 24px 0;
+    }
+    .stock-finish__stats div {
+        background: #f8fafc;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 14px;
+    }
+    .stock-finish__stats span {
+        display: block;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: #94a3b8;
+        margin-bottom: 4px;
+    }
+    .stock-finish__stats strong {
+        font-size: 22px;
+        color: #0f172a;
+    }
+    .finish-warning {
+        background: #fef3c7;
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid #fcd34d;
+        font-size: 14px;
+        margin-bottom: 20px;
+        color: #92400e;
+    }
+    .finish-form label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+        color: #475569;
+    }
+    .finish-form button {
+        border: none;
+        border-radius: 14px;
+        padding: 12px 20px;
+        font-weight: 700;
+        background: linear-gradient(135deg,#ef4444,#dc2626);
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+</style>
+<div class="stock-finish">
+    <div class="stock-finish__card">
+        <div class="stock-finish__header">
+            <h1><?php echo __('Finish Stock Take'); ?></h1>
+            <p><?php echo __('You are about to end the current session'); ?> · <strong><?php echo htmlspecialchars($activeData['stock_take_name']); ?></strong></p>
+        </div>
+        <div class="stock-finish__stats">
+            <div><span><?php echo __('Scanned'); ?></span><strong><?php echo number_format($counts['scanned']); ?></strong></div>
+            <div><span><?php echo __('Missing'); ?></span><strong style="color:#dc2626;"><?php echo number_format($counts['missing']); ?></strong></div>
+            <div><span><?php echo __('On Loan'); ?></span><strong><?php echo number_format($counts['loan']); ?></strong></div>
+            <div><span><?php echo __('Progress'); ?></span><strong><?php echo $progress; ?>%</strong></div>
+        </div>
+        <div class="finish-warning">
+            <strong><?php echo __('Irreversible action'); ?>:</strong> <?php echo __('Finishing will lock this session and generate the reconciliation report. You will not be able to rescan under the same session.'); ?>
+        </div>
+        <form method="post" class="finish-form">
+            <label>
+                <input type="checkbox" name="purge[]" value="1">
+                <?php echo __('Delete items flagged as missing from the catalog'); ?>
+            </label>
+            <input type="hidden" name="confirmFinish" value="true">
+            <button type="submit" onclick="return confirm('<?php echo __('Finish and generate report now?'); ?>')">
+                <i class="fas fa-flag-checkered"></i> <?php echo __('Finish Stock Take'); ?>
+            </button>
+        </form>
+    </div>
 </div>
 <?php
-    // create new instance
-    $form = new simbio_form_table_AJAX('stockTakeForm', $_SERVER['PHP_SELF'], 'post');
-    $form->submit_button_attr = 'value="'.__('Finish Stock Take').'" class="button btn btn-delete btn-danger"';
-
-    // form table attributes
-    $form->table_attr = 'id="dataList" class="s-table table"';
-    $form->table_header_attr = 'class="alterCell font-weight-bold"';
-    $form->table_content_attr = 'class="alterCell2"';
-
-    /* Form Element(s) */
-    // purge lost item
-    $purge_options[] = array('1', __('Yes'));
-    $form->addCheckBox('purge', __('Purge Lost Item'), $purge_options);
-    // hidden item
-    $form->addHidden('confirmFinish', 'true');
-    // print out the object
-    echo $form->printOut();
 }

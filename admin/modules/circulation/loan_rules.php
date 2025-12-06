@@ -179,31 +179,38 @@ echo '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-a
           </div>
 
           <!-- Collapsible Search Filter -->
-          <div class="workspace-search-toggle collapsed" id="loanRulesSearchToggle" style="cursor: pointer; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <i class="fas fa-search"></i>
-              <span style="font-weight: 500;"><?php echo __('Search & Filter'); ?></span>
+          <div class="biblio-search-card" style="background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;">
+            <div class="biblio-search-toggle collapsed" id="loanRulesSearchToggle" style="cursor: pointer; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-radius: 12px; transition: background 0.2s;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-search" style="color: #3b82f6;"></i>
+                <span style="font-weight: 500; color: #333;"><?php echo __('Search & Filter'); ?></span>
+              </div>
+              <i class="fas fa-chevron-down toggle-icon" style="color: #666; transition: transform 0.3s;"></i>
             </div>
-            <i class="fas fa-chevron-down toggle-icon" style="transition: transform 0.3s;"></i>
-          </div>
 
-          <div class="workspace-search-content collapse" id="loanRulesSearchContent">
-            <form name="search" action="<?php echo MWB; ?>circulation/loan_rules.php" id="search" method="get" class="workspace-form">
-              <div class="workspace-form-group">
-                <label class="workspace-label">
-                  <i class="fas fa-search"></i> <?php echo __('Search'); ?>
-                </label>
-                <div style="display: flex; gap: 12px;">
-                  <input type="text" name="keywords" class="form-control workspace-input" placeholder="<?php echo __('Search loan rules...'); ?>">
-                  <button type="submit" id="doSearch" class="workspace-btn workspace-btn--primary">
-                    <i class="fas fa-search"></i>
-                    <span><?php echo __('Search'); ?></span>
+            <div class="biblio-search-content collapse" id="loanRulesSearchContent" style="padding: 0 18px 18px 18px;">
+              <form name="search" action="<?php echo MWB; ?>circulation/loan_rules.php" id="search" method="get" style="display: grid; gap: 12px;">
+                <div>
+                  <label style="display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px;">
+                    <i class="fas fa-search"></i> <?php echo __('Search Loan Rules'); ?>
+                  </label>
+                  <input type="text" name="keywords" class="form-control" placeholder="<?php echo __('Search by member type...'); ?>">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button type="submit" id="doSearch" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-search"></i> <?php echo __('Search'); ?>
                   </button>
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         </div>
+
+        <style>
+          .biblio-search-toggle:hover {
+            background: #f8f9fa !important;
+          }
+        </style>
 </div>
 
 <script>

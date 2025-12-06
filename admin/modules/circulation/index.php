@@ -104,30 +104,44 @@ if (isset($_SESSION['memberID']) AND !empty($_SESSION['memberID'])) {
               <label class="workspace-label">
                 <i class="fas fa-id-card"></i> <?php echo __('Member ID'); ?>
               </label>
-              <?php
-              // create AJAX drop down
-              $ajaxDD = new simbio_fe_AJAX_select();
-              $ajaxDD->element_name = 'memberID';
-              $ajaxDD->element_css_class = 'form-control workspace-input';
-              $ajaxDD->handler_URL = MWB.'membership/member_AJAX_response.php';
-              echo $ajaxDD->out();
-              ?>
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <?php
+                // create AJAX drop down
+                $ajaxDD = new simbio_fe_AJAX_select();
+                $ajaxDD->element_name = 'memberID';
+                $ajaxDD->element_css_class = 'form-control workspace-input';
+                $ajaxDD->handler_URL = MWB.'membership/member_AJAX_response.php';
+                echo $ajaxDD->out();
+                ?>
+                <button type="submit" name="start" id="start" class="workspace-btn workspace-btn--primary" style="white-space: nowrap; flex-shrink: 0;">
+                  <i class="fas fa-play-circle"></i>
+                  <span><?php echo __('Start Transaction'); ?></span>
+                </button>
+              </div>
             </div>
 
-            <div class="workspace-actions">
-              <button type="submit" name="start" id="start" class="workspace-btn workspace-btn--primary">
-                <i class="fas fa-play-circle"></i>
-                <span><?php echo __('Start Transaction'); ?></span>
-              </button>
-              <?php if($sysconf['barcode_reader']) : ?>
+            <?php if($sysconf['barcode_reader']) : ?>
+            <div class="workspace-actions" style="margin-top: 8px;">
               <a class="workspace-btn workspace-btn--secondary notAJAX" id="barcodeReader" href="<?php echo MWB.'circulation/barcode_reader.php?mode=membership' ?>">
                 <i class="fas fa-barcode"></i>
                 <span><?php echo __('Barcode Reader (F8)'); ?></span>
               </a>
-              <?php endif ?>
             </div>
+            <?php endif ?>
           </form>
         </div>
+
+        <style>
+          /* Responsive layout for form with inline button */
+          @media (max-width: 768px) {
+            .workspace-form-group > div[style*="display: flex"] {
+              flex-direction: column !important;
+            }
+            .workspace-form-group .workspace-btn {
+              width: 100% !important;
+            }
+          }
+        </style>
 
         <!-- Quick Actions -->
         <div class="workspace-quick-actions">

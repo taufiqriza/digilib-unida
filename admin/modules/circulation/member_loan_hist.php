@@ -56,50 +56,136 @@ if (isset($_SESSION['memberID']) AND !empty($_SESSION['memberID'])) {
     /* LOAN HISTORY LIST */
     $memberID = trim($_SESSION['memberID']);
 
-    echo '<div style="padding: 20px;">';
+    // Get member stats
+    $total_loans_q = $dbs->query("SELECT COUNT(*) FROM loan WHERE member_id='".$dbs->escape_string($memberID)."'");
+    $total_loans = $total_loans_q->fetch_row()[0];
 
-    // table spec
-    $table_spec = 'loan AS l
-        LEFT JOIN item AS i ON l.item_code=i.item_code
-        LEFT JOIN biblio AS b ON i.biblio_id=b.biblio_id';
+    $active_loans_q = $dbs->query("SELECT COUNT(*) FROM loan WHERE member_id='".$dbs->escape_string($memberID)."' AND is_return=0 AND is_lent=1");
+    $active_loans = $active_loans_q->fetch_row()[0];
+    ?>
 
-    // create datagrid
-    $datagrid = new simbio_datagrid();
-    $datagrid->setSQLColumn(
-        'l.item_code AS \''.__('Item Code').'\'',
-        'b.title AS \''.__('Title').'\'',
-        'l.loan_date AS \''.__('Loan Date').'\'',
-        'IF(is_return = 0, \'<i>'.__('Not Returned Yet').'</i>\', return_date) AS \''.__('Returned Date').'\'');
-    $datagrid->setSQLorder("l.loan_date DESC");
+    <div class="circulation-workspace">
+        <!-- Workspace Header Hero -->
+        <div class="workspace-hero">
+            <div class="workspace-hero__icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <div class="workspace-hero__text">
+                <h2><?php echo __('Loan History'); ?></h2>
+                <p><?php echo __('Complete Member Lending History'); ?></p>
+            </div>
+            <div class="workspace-hero__stats">
+                <div class="workspace-stat">
+                    <div class="workspace-stat__value"><?php echo $total_loans; ?></div>
+                    <div class="workspace-stat__label"><?php echo __('Total'); ?></div>
+                </div>
+                <div class="workspace-stat">
+                    <div class="workspace-stat__value"><?php echo $active_loans; ?></div>
+                    <div class="workspace-stat__label"><?php echo __('Active'); ?></div>
+                </div>
+            </div>
+        </div>
 
-    $criteria = 'l.member_id=\''.$dbs->escape_string($memberID).'\' ';
-    // is there any search
-    if (isset($_GET['keywords']) AND $_GET['keywords']) {
-        $keyword = $dbs->escape_string($_GET['keywords']);
-        $criteria .= " AND (l.item_code LIKE '%$keyword%' OR b.title LIKE '%$keyword%')";
-    }
-    $datagrid->setSQLCriteria($criteria);
+        <!-- Workspace Surface -->
+        <div class="workspace-surface">
+            <div class="workspace-section">
+                <!-- Collapsible Search Filter -->
+                <div class="biblio-search-card" style="background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                    <div class="biblio-search-toggle collapsed" id="loanHistSearchToggle" style="cursor: pointer; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-radius: 12px; transition: background 0.2s;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-search" style="color: #3b82f6;"></i>
+                            <span style="font-weight: 500; color: #333;"><?php echo __('Search History'); ?></span>
+                        </div>
+                        <i class="fas fa-chevron-down toggle-icon" style="color: #666; transition: transform 0.3s;"></i>
+                    </div>
 
-    // set table and table header attributes
-    $datagrid->table_attr = 'id="dataList" class="s-table table" style="width: 100%;"';
-    $datagrid->table_header_attr = 'class="dataListHeader" style="font-weight: bold;"';
-    $datagrid->icon_edit = SWB.'admin/'.$sysconf['admin_template']['dir'].'/'.$sysconf['admin_template']['theme'].'/edit.gif';
-    // special properties
-    $datagrid->using_AJAX = false;
-    $datagrid->column_width = array(1 => '70%');
-    $datagrid->disableSort('Returned Date');
+                    <div class="biblio-search-content collapse" id="loanHistSearchContent" style="padding: 0 18px 18px 18px;">
+                        <form method="get" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: grid; gap: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px;">
+                                    <i class="fas fa-search"></i> <?php echo __('Search'); ?>
+                                </label>
+                                <input type="text" name="keywords" class="form-control" placeholder="<?php echo __('Search by item code or title...'); ?>">
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                    <i class="fas fa-search"></i> <?php echo __('Search'); ?>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
-    // put the result into variables
-    $datagrid_result = $datagrid->createDataGrid($dbs, $table_spec, 20, false);
-    if (isset($_GET['keywords']) AND $_GET['keywords']) {
-        $msg = str_replace('{result->num_rows}', $datagrid->num_rows, __('Found <strong>{result->num_rows}</strong> from your keywords')); //mfc
-        echo '<div class="infoBox">'.$msg.' : "'.$_GET['keywords'].'"</div>';
-    }
+                <?php
+                // table spec
+                $table_spec = 'loan AS l
+                    LEFT JOIN item AS i ON l.item_code=i.item_code
+                    LEFT JOIN biblio AS b ON i.biblio_id=b.biblio_id';
 
-    echo $datagrid_result;
-    echo '</div>';
+                // create datagrid
+                $datagrid = new simbio_datagrid();
+                $datagrid->setSQLColumn(
+                    'l.item_code AS \''.__('Item Code').'\'',
+                    'b.title AS \''.__('Title').'\'',
+                    'l.loan_date AS \''.__('Loan Date').'\'',
+                    'IF(is_return = 0, \'<span class="badge badge-warning"><i class="fas fa-clock"></i> '.__('Not Returned Yet').'</span>\', return_date) AS \''.__('Returned Date').'\'');
+                $datagrid->setSQLorder("l.loan_date DESC");
+
+                $criteria = 'l.member_id=\''.$dbs->escape_string($memberID).'\' ';
+                // is there any search
+                if (isset($_GET['keywords']) AND $_GET['keywords']) {
+                    $keyword = $dbs->escape_string($_GET['keywords']);
+                    $criteria .= " AND (l.item_code LIKE '%$keyword%' OR b.title LIKE '%$keyword%')";
+                }
+                $datagrid->setSQLCriteria($criteria);
+
+                // set table and table header attributes
+                $datagrid->table_attr = 'id="dataList" class="s-table table" style="width: 100%;"';
+                $datagrid->table_header_attr = 'class="dataListHeader" style="font-weight: bold;"';
+                $datagrid->icon_edit = SWB.'admin/'.$sysconf['admin_template']['dir'].'/'.$sysconf['admin_template']['theme'].'/edit.gif';
+                // special properties
+                $datagrid->using_AJAX = false;
+                $datagrid->column_width = array(1 => '70%');
+                $datagrid->disableSort('Returned Date');
+
+                // put the result into variables
+                $datagrid_result = $datagrid->createDataGrid($dbs, $table_spec, 20, false);
+                if (isset($_GET['keywords']) AND $_GET['keywords']) {
+                    $msg = str_replace('{result->num_rows}', $datagrid->num_rows, __('Found <strong>{result->num_rows}</strong> from your keywords')); //mfc
+                    echo '<div class="infoBox">'.$msg.' : "'.htmlentities($_GET['keywords']).'"</div>';
+                }
+
+                echo $datagrid_result;
+                ?>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .biblio-search-toggle:hover {
+            background: #f8f9fa !important;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            $('#loanHistSearchToggle').click(function(e) {
+                e.preventDefault();
+                $(this).toggleClass('collapsed');
+                $('#loanHistSearchContent').collapse('toggle');
+
+                if ($(this).hasClass('collapsed')) {
+                    $(this).find('.toggle-icon').css('transform', 'rotate(0deg)');
+                } else {
+                    $(this).find('.toggle-icon').css('transform', 'rotate(180deg)');
+                }
+            });
+        });
+    </script>
+
+    <?php
 } else {
-    echo '<div style="padding: 20px;"><div class="errorBox">No member session found.</div></div>';
+    echo '<div class="circulation-workspace"><div class="workspace-surface"><div class="errorBox">No member session found.</div></div></div>';
 }
 
 // get the buffered content

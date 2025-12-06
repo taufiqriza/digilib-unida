@@ -44,7 +44,12 @@ ob_start();
 if (isset($_POST['counter'])) {
 
   if (trim($_POST['memberID']) == '') {
-    die(Json::stringify(['message' => __('Member ID can\'t be empty'), 'image' => 'person.png'])->withHeader());
+    die(Json::stringify([
+        'message' => __('Member ID can\'t be empty'),
+        'image' => 'person.png',
+        'status' => __('Member ID can\'t be empty'),
+        'is_new_visit' => false,
+    ])->withHeader());
   }
    
   // sleep for a while
@@ -75,7 +80,14 @@ if (isset($_POST['counter'])) {
   }
   
   // send response
-  die(Json::stringify(['message' => $message, 'image' => $image, 'status' => $visitor->getError()])->withHeader());
+  $isNewVisit = $visitor->getResult() && !$visitor->isAlreadyCheckIn();
+
+  die(Json::stringify([
+      'message' => $message,
+      'image' => $image,
+      'status' => $visitor->getError(),
+      'is_new_visit' => $isNewVisit,
+  ])->withHeader());
 }
 
 // include visitor form template

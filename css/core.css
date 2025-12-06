@@ -270,3 +270,22 @@ form.clock {
 [name="keywords"],[name="quickReturnID"]{
     margin-left: 8px;
 }
+
+.menu-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 8px;
+    line-height: 1;
+}
+
+.menu-badge--green {
+    background: #059669;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.35);
+}

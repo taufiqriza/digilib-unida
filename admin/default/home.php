@@ -6,6 +6,24 @@ if (!defined('INDEX_AUTH')) {
 if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
     include_once '../../sysconfig.inc.php';
 }
+
+if (!function_exists('dashboard_normalize_year')) {
+    function dashboard_normalize_year($raw)
+    {
+        $raw = trim((string)$raw);
+        if ($raw === '') {
+            return null;
+        }
+        if (preg_match('/(17|18|19|20|21)\d{2}/', $raw, $match)) {
+            $year = (int)$match[0];
+            $current = (int)date('Y') + 1;
+            if ($year >= 1700 && $year <= $current) {
+                return (string)$year;
+            }
+        }
+        return null;
+    }
+}
 ?>
 
 <head>
@@ -27,6 +45,121 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
         }
         .menuBox.adminHome {
             display: none;
+        }
+        /* Mirror Bibliography Class hero styling for consistency */
+        .dashboard-hero {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 85%);
+            border-radius: 20px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 20px rgba(30, 64, 175, 0.25);
+            gap: 24px;
+        }
+        .dashboard-hero__content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+        .dashboard-hero__icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .dashboard-hero__eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.85;
+            margin: 0 0 6px 0;
+        }
+        .dashboard-hero__text h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .dashboard-hero__text p {
+            margin: 6px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .dashboard-hero__meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            min-width: 220px;
+        }
+        .dashboard-hero__status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #ecfdf5;
+            font-weight: 600;
+        }
+        .dashboard-hero__status-pill i {
+            font-size: 0.85rem;
+            color: #bbf7d0;
+        }
+        .dashboard-hero__meta-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.9rem;
+        }
+        .dashboard-quick-grid .stat-card-label {
+            font-size: clamp(0.75rem, 1.4vw, 0.95rem);
+            line-height: 1.25;
+        }
+        .dashboard-quick-grid .stat-card-value {
+            font-size: clamp(1.6rem, 3vw, 2.2rem);
+            line-height: 1.1;
+        }
+        .dashboard-quick-grid .stat-card-note {
+            font-size: clamp(0.65rem, 1.2vw, 0.8rem);
+        }
+        .dashboard-quick-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .dashboard-quick-card__icon {
+            flex-shrink: 0;
+        }
+        .dashboard-quick-card__text {
+            flex: 1;
+            min-width: 0;
+        }
+        @media (max-width: 768px) {
+            .dashboard-hero {
+                flex-direction: column;
+                text-align: center;
+                padding: 24px;
+            }
+            .dashboard-hero__content {
+                flex-direction: column;
+            }
+            .dashboard-hero__meta {
+                width: 100%;
+                align-items: center;
+            }
+            .dashboard-quick-card {
+                align-items: flex-start;
+            }
         }
     </style>
     <script>
@@ -51,23 +184,26 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
     
     <div class_alias="contentDesc" class="w-full p-6 md:px-8 mx-auto">
         
-        <div class="bg-gradient-to-r from-blue-700 to-blue-500 text-white shadow-xl mb-6 rounded-xl">
-            <div class="p-6 md:p-8 flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-home text-3xl opacity-75"></i>
-                    <div>
-                        <h1 class_alias="per_title" class="text-3xl font-extrabold">
-                            <?php echo __('Library Administration Dashboard'); ?>
-                        </h1>
-                        <p class="text-base text-blue-100 opacity-90 mt-1">Monitor, manage, and analyze library operations efficiently and effectively.</p>
-                    </div>
+        <div class="dashboard-hero">
+            <div class="dashboard-hero__content">
+                <div class="dashboard-hero__icon">
+                    <i class="fas fa-layer-group"></i>
                 </div>
-                <div class="text-right text-blue-100 text-sm opacity-90">
-                    <div class="flex items-center justify-end mb-1">
-                        <span class="inline-block w-3 h-3 bg-green-400 rounded-full mr-2"></span> Operational
-                    </div>
-                    <div>Last Updated: <?php echo date('d M, Y H:i'); ?></div>
+                <div class="dashboard-hero__text">
+                    <p class="dashboard-hero__eyebrow"><?php echo __('Admin Overview'); ?></p>
+                    <h1 class_alias="per_title">
+                        <?php echo __('Library Administration Dashboard'); ?>
+                    </h1>
+                    <p><?php echo __('Monitor, manage, and analyze library operations efficiently and effectively.'); ?></p>
                 </div>
+            </div>
+            <div class="dashboard-hero__meta">
+                <span class="dashboard-hero__status-pill">
+                    <i class="fas fa-check-circle"></i> <?php echo __('Operational'); ?>
+                </span>
+                <span class="dashboard-hero__meta-time">
+                    <i class="fas fa-clock"></i> <?php echo __('Last updated'); ?>: <?php echo date('d M, Y H:i'); ?>
+                </span>
             </div>
         </div>
         
@@ -123,7 +259,74 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
             echo '</ul>';
             echo '</div>';
         }
-        
+
+        $bc_material_types = 0;
+        $bc_collection_types = 0;
+        $bc_top_year = '-';
+        $bc_top_year_total = 0;
+        $bc_top_gmd_name = '-';
+        $bc_top_gmd_total = 0;
+        $bc_top_publisher_name = '-';
+        $bc_top_publisher_total = 0;
+        $bc_module_url = MWB . 'bibliography/bibliography_class.php';
+
+        if ($mt_q = $dbs->query("SELECT COUNT(*) AS total FROM mst_gmd")) {
+            $mt_d = $mt_q->fetch_assoc();
+            $bc_material_types = (int)$mt_d['total'];
+            $mt_q->free_result();
+        }
+
+        if ($ct_q = $dbs->query("SELECT COUNT(*) AS total FROM mst_coll_type")) {
+            $ct_d = $ct_q->fetch_assoc();
+            $bc_collection_types = (int)$ct_d['total'];
+            $ct_q->free_result();
+        }
+
+        if ($gmd_top_q = $dbs->query("SELECT g.gmd_name, COUNT(b.biblio_id) AS total
+            FROM mst_gmd g LEFT JOIN biblio b ON g.gmd_id=b.gmd_id AND b.opac_hide=0
+            GROUP BY g.gmd_id, g.gmd_name
+            ORDER BY total DESC LIMIT 1")) {
+            if ($gmd_top_q->num_rows) {
+                $gmd_top_d = $gmd_top_q->fetch_assoc();
+                $bc_top_gmd_name = $gmd_top_d['gmd_name'];
+                $bc_top_gmd_total = (int)$gmd_top_d['total'];
+            }
+            $gmd_top_q->free_result();
+        }
+
+        if ($pub_top_q = $dbs->query("SELECT p.publisher_name, COUNT(b.biblio_id) AS total
+            FROM mst_publisher p LEFT JOIN biblio b ON p.publisher_id=b.publisher_id AND b.opac_hide=0
+            GROUP BY p.publisher_id, p.publisher_name
+            ORDER BY total DESC LIMIT 1")) {
+            if ($pub_top_q->num_rows) {
+                $pub_top_d = $pub_top_q->fetch_assoc();
+                $bc_top_publisher_name = $pub_top_d['publisher_name'];
+                $bc_top_publisher_total = (int)$pub_top_d['total'];
+            }
+            $pub_top_q->free_result();
+        }
+
+        if ($year_raw_q = $dbs->query("SELECT publish_year, COUNT(*) AS total
+            FROM biblio
+            WHERE publish_year IS NOT NULL AND publish_year <> '' AND opac_hide=0
+            GROUP BY publish_year")) {
+            $year_counts = array();
+            while ($yr = $year_raw_q->fetch_assoc()) {
+                $normalized = dashboard_normalize_year($yr['publish_year']);
+                if ($normalized) {
+                    $year_counts[$normalized] = ($year_counts[$normalized] ?? 0) + (int)$yr['total'];
+                }
+            }
+            $year_raw_q->free_result();
+            if ($year_counts) {
+                arsort($year_counts, SORT_NUMERIC);
+                $bc_top_year = key($year_counts);
+                $bc_top_year_total = current($year_counts);
+            }
+        }
+        ?>
+
+        <?php
         if ($_SESSION['uid'] === '1') {
             $query_of_tables = $dbs->query('SHOW TABLES');
             $num_of_tables = $query_of_tables->num_rows;
@@ -195,52 +398,104 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
             $start_date = date('Y-m-d');
             ?>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+            <div class="dashboard-quick-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 mb-5">
                 
-                <div class="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                    <div class="flex items-center gap-4">
-                        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-blue-100 text-primary-500">
+                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="dashboard-quick-card">
+                        <div class="dashboard-quick-card__icon w-12 h-12 flex items-center justify-center rounded-lg bg-blue-100 text-primary-500">
                             <i class="fa fa-bookmark fa-lg"></i>
                         </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-slate-500"><?php echo __('Total of Collections') ?></h4>
-                            <div class="text-3xl font-extrabold text-slate-900 biblio_total_all">0</div>
+                        <div class="dashboard-quick-card__text">
+                            <h4 class="stat-card-label text-sm font-medium text-slate-500"><?php echo __('Total of Collections') ?></h4>
+                            <div class="stat-card-value text-3xl font-extrabold text-slate-900 biblio_total_all">0</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                    <div class="flex items-center gap-4">
-                        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-green-100 text-green-500">
+                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="dashboard-quick-card">
+                        <div class="dashboard-quick-card__icon w-12 h-12 flex items-center justify-center rounded-lg bg-green-100 text-green-500">
                             <i class="fa fa-barcode fa-lg"></i>
                         </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-slate-500"><?php echo __('Total of Items') ?></h4>
-                            <div class="text-3xl font-extrabold text-slate-900 item_total_all">0</div>
+                        <div class="dashboard-quick-card__text">
+                            <h4 class="stat-card-label text-sm font-medium text-slate-500"><?php echo __('Total of Items') ?></h4>
+                            <div class="stat-card-value text-3xl font-extrabold text-slate-900 item_total_all">0</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                    <div class="flex items-center gap-4">
-                        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-yellow-100 text-yellow-500">
+                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="dashboard-quick-card">
+                        <div class="dashboard-quick-card__icon w-12 h-12 flex items-center justify-center rounded-lg bg-yellow-100 text-yellow-500">
                             <i class="fa fa-archive fa-lg"></i>
                         </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-slate-500"><?php echo __('Lent') ?></h4>
-                            <div class="text-3xl font-extrabold text-slate-900 item_total_lent">0</div>
+                        <div class="dashboard-quick-card__text">
+                            <h4 class="stat-card-label text-sm font-medium text-slate-500"><?php echo __('Lent') ?></h4>
+                            <div class="stat-card-value text-3xl font-extrabold text-slate-900 item_total_lent">0</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                    <div class="flex items-center gap-4">
-                        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-sky-100 text-sky-500">
+                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="dashboard-quick-card">
+                        <div class="dashboard-quick-card__icon w-12 h-12 flex items-center justify-center rounded-lg bg-sky-100 text-sky-500">
                             <i class="fa fa-check fa-lg"></i>
                         </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-slate-500"><?php echo __('Available') ?></h4>
-                            <div class="text-3xl font-extrabold text-slate-900 item_total_available">0</div>
+                        <div class="dashboard-quick-card__text">
+                            <h4 class="stat-card-label text-sm font-medium text-slate-500"><?php echo __('Available') ?></h4>
+                            <div class="stat-card-value text-3xl font-extrabold text-slate-900 item_total_available">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="dashboard-quick-card">
+                        <div class="dashboard-quick-card__icon w-12 h-12 flex items-center justify-center rounded-lg bg-purple-100 text-purple-500">
+                            <i class="fa fa-calendar-alt fa-lg"></i>
+                        </div>
+                        <div class="dashboard-quick-card__text">
+                            <h4 class="stat-card-label text-sm font-medium text-slate-500"><?php echo __('Items in'); ?> <?php echo htmlspecialchars($bc_top_year); ?></h4>
+                            <div class="stat-card-value text-3xl font-extrabold text-slate-900"><?php echo number_format($bc_top_year_total); ?></div>
+                            <p class="stat-card-note text-xs text-slate-400 mt-1"><?php echo __('Most productive publication year'); ?></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="dashboard-quick-card">
+                        <div class="dashboard-quick-card__icon w-12 h-12 flex items-center justify-center rounded-lg bg-indigo-100 text-indigo-500">
+                            <i class="fa fa-layer-group fa-lg"></i>
+                        </div>
+                        <div class="dashboard-quick-card__text">
+                            <h4 class="stat-card-label text-sm font-medium text-slate-500"><?php echo __('Material Types Tracked'); ?></h4>
+                            <div class="stat-card-value text-3xl font-extrabold text-slate-900"><?php echo number_format($bc_material_types); ?></div>
+                            <p class="stat-card-note text-xs text-slate-400 mt-1"><?php echo __('Top format:'); ?> <?php echo htmlspecialchars($bc_top_gmd_name); ?></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="dashboard-quick-card">
+                        <div class="dashboard-quick-card__icon w-12 h-12 flex items-center justify-center rounded-lg bg-emerald-100 text-emerald-500">
+                            <i class="fa fa-th-large fa-lg"></i>
+                        </div>
+                        <div class="dashboard-quick-card__text">
+                            <h4 class="stat-card-label text-sm font-medium text-slate-500"><?php echo __('Collection Types Covered'); ?></h4>
+                            <div class="stat-card-value text-3xl font-extrabold text-slate-900"><?php echo number_format($bc_collection_types); ?></div>
+                            <p class="stat-card-note text-xs text-slate-400 mt-1"><?php echo __('Fully mapped in Bibliography Class'); ?></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="dashboard-quick-card">
+                        <div class="dashboard-quick-card__icon w-12 h-12 flex items-center justify-center rounded-lg bg-orange-100 text-orange-500">
+                            <i class="fa fa-building fa-lg"></i>
+                        </div>
+                        <div class="dashboard-quick-card__text">
+                            <h4 class="stat-card-label text-sm font-medium text-slate-500"><?php echo __('Leading Publisher'); ?></h4>
+                            <div class="stat-card-value text-3xl font-extrabold text-slate-900"><?php echo number_format($bc_top_publisher_total); ?></div>
+                            <p class="stat-card-note text-xs text-slate-400 mt-1"><?php echo htmlspecialchars($bc_top_publisher_name); ?></p>
                         </div>
                     </div>
                 </div>
@@ -413,4 +668,3 @@ if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
     });
 
 </script>
-

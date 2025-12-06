@@ -10,23 +10,17 @@
  * @version   1.0
  */
 
-// key to authentication
 define('INDEX_AUTH', '1');
 define('BIBLIOGRAPHY_AUTH', 1);
 
-// main system configuration
 require '../../../sysconfig.inc.php';
 
-// IP based access limitation
 require LIB . 'ip_based_access.inc.php';
 do_checkIP('smc');
 do_checkIP('smc-bibliography');
 
-// start the session
 require SB . 'admin/default/session.inc.php';
 require SB . 'admin/default/session_check.inc.php';
-
-// privileges checking
 $can_read = utility::havePrivilege('bibliography', 'r');
 
 if (!$can_read) {
@@ -41,22 +35,31 @@ require SIMBIO . 'simbio_DB/simbio_dbop.inc.php';
 
 $page_title = 'Bibliography Classification & Category';
 
-// Get statistics
+function normalize_biblio_year($raw)
+{
+    $raw = trim((string)$raw);
+    if ($raw === '') {
+        return null;
+    }
+    if (preg_match('/(17|18|19|20|21)\d{2}/', $raw, $match)) {
+        $year = (int)$match[0];
+        $current = (int)date('Y') + 1;
+        if ($year >= 1700 && $year <= $current) {
+            return (string)$year;
+        }
+    }
+    return null;
+}
+
 function getStatistics($dbs)
 {
     $stats = array();
-
-    // Total bibliographies
     $total_q = $dbs->query("SELECT COUNT(DISTINCT biblio_id) as total FROM biblio WHERE opac_hide=0");
     $total_d = $total_q->fetch_assoc();
     $stats['total_biblio'] = $total_d['total'];
-
-    // Total items
     $items_q = $dbs->query("SELECT COUNT(item_id) as total FROM item");
     $items_d = $items_q->fetch_assoc();
     $stats['total_items'] = $items_d['total'];
-
-    // By GMD (General Material Designation)
     $gmd_q = $dbs->query("SELECT
         g.gmd_id,
         g.gmd_name,
@@ -70,8 +73,6 @@ function getStatistics($dbs)
     while ($gmd_d = $gmd_q->fetch_assoc()) {
         $stats['by_gmd'][] = $gmd_d;
     }
-
-    // By Collection Type
     $coll_q = $dbs->query("SELECT
         ct.coll_type_id,
         ct.coll_type_name,
@@ -86,8 +87,6 @@ function getStatistics($dbs)
     while ($coll_d = $coll_q->fetch_assoc()) {
         $stats['by_collection'][] = $coll_d;
     }
-
-    // By Classification (Top 10)
     $class_q = $dbs->query("SELECT
         classification,
         COUNT(DISTINCT biblio_id) as count
@@ -100,8 +99,6 @@ function getStatistics($dbs)
     while ($class_d = $class_q->fetch_assoc()) {
         $stats['by_classification'][] = $class_d;
     }
-
-    // By Language (Top 10)
     $lang_q = $dbs->query("SELECT
         l.language_id,
         l.language_name,
@@ -115,6 +112,39 @@ function getStatistics($dbs)
     $stats['by_language'] = array();
     while ($lang_d = $lang_q->fetch_assoc()) {
         $stats['by_language'][] = $lang_d;
+    }
+    $publisher_q = $dbs->query("SELECT
+        p.publisher_id,
+        p.publisher_name,
+        COUNT(DISTINCT b.biblio_id) as count
+        FROM mst_publisher p
+        LEFT JOIN biblio b ON p.publisher_id = b.publisher_id AND b.opac_hide=0
+        GROUP BY p.publisher_id, p.publisher_name
+        HAVING count > 0
+        ORDER BY count DESC
+        LIMIT 12");
+    $stats['by_publisher'] = array();
+    while ($publisher_d = $publisher_q->fetch_assoc()) {
+        $stats['by_publisher'][] = $publisher_d;
+    }
+    $year_counts = array();
+    $year_q = $dbs->query("SELECT publish_year FROM biblio WHERE publish_year IS NOT NULL AND publish_year <> '' AND opac_hide=0");
+    while ($year_d = $year_q->fetch_assoc()) {
+        $normalized = normalize_biblio_year($year_d['publish_year']);
+        if ($normalized) {
+            if (!isset($year_counts[$normalized])) {
+                $year_counts[$normalized] = 0;
+            }
+            $year_counts[$normalized]++;
+        }
+    }
+    krsort($year_counts, SORT_NUMERIC);
+    $stats['by_year'] = array();
+    foreach ($year_counts as $year => $count) {
+        $stats['by_year'][] = array('publish_year' => $year, 'count' => $count);
+        if (count($stats['by_year']) >= 30) {
+            break;
+        }
     }
 
     return $stats;
@@ -131,7 +161,6 @@ $statistics = getStatistics($dbs);
     <title><?php echo $page_title; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Color System */
         :root {
             --primary-blue: #3b82f6;
             --primary-blue-dark: #2563eb;
@@ -162,81 +191,56 @@ $statistics = getStatistics($dbs);
             padding: 0;
         }
 
-        /* Hero Section */
         .biblio-class-hero {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
-            border-radius: var(--radius-xl);
-            padding: 32px 40px;
-            margin: 20px 20px 0 20px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 80%);
+            border-radius: 20px;
+            padding: 22px 28px;
+            margin: 16px 20px 0 20px;
             color: white;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow-md);
             position: relative;
-            overflow: hidden;
-        }
-
-        .biblio-class-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            border-radius: 50%;
         }
 
         .biblio-class-hero__content {
-            position: relative;
-            z-index: 1;
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 14px;
             flex: 1;
         }
 
         .biblio-class-hero__icon {
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border-radius: 50%;
+            width: 54px;
+            height: 54px;
+            background: rgba(255, 255, 255, 0.22);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            font-size: 22px;
         }
 
         .biblio-class-hero__text h1 {
-            margin: 0 0 8px 0;
-            font-size: 28px;
+            margin: 0;
+            font-size: 22px;
             font-weight: 700;
-            letter-spacing: -0.5px;
         }
 
         .biblio-class-hero__text p {
-            margin: 0;
-            font-size: 15px;
-            opacity: 0.95;
-            line-height: 1.5;
+            margin: 4px 0 0 0;
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.4;
         }
 
-        /* Container */
         .biblio-class-container {
             padding: 20px;
             max-width: 1600px;
             margin: 0 auto;
         }
 
-        /* Statistics Dashboard - Home.php style */
         .stats-dashboard {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -272,6 +276,7 @@ $statistics = getStatistics($dbs);
             justify-content: center;
             font-size: 20px;
         }
+
 
         .stat-card__icon--primary {
             background: #dbeafe;
@@ -311,12 +316,66 @@ $statistics = getStatistics($dbs);
             line-height: 1;
         }
 
-        /* Category Grid */
+        .menu-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 6px;
+            background: #10b981;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+        }
+
+        .menu-badge--green {
+            background: #059669;
+        }
+
+        .category-section-header {
+            margin: 36px 0 18px;
+            padding: 0 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .category-section__eyebrow {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-light);
+            margin: 0 0 6px;
+        }
+
+        .category-section__title {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .category-section__hint {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
         .category-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 24px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 1200px) {
+            .category-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         .category-card {
@@ -330,13 +389,13 @@ $statistics = getStatistics($dbs);
 
         .category-card__header {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            padding: 20px 24px;
+            padding: 16px 20px;
             border-bottom: 2px solid var(--border-light);
         }
 
         .category-card__title {
             margin: 0;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--text-dark);
             display: flex;
@@ -345,21 +404,27 @@ $statistics = getStatistics($dbs);
         }
 
         .category-card__title i {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
             color: white;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .category-card__body {
             padding: 16px 24px 24px;
             max-height: 400px;
             overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+
+        .category-card__body:hover {
+            scrollbar-width: thin;
         }
 
         .category-item {
@@ -373,6 +438,19 @@ $statistics = getStatistics($dbs);
             transition: all 0.2s ease;
             cursor: pointer;
             border: 1px solid transparent;
+        }
+
+        .category-item--stacked {
+            align-items: flex-start;
+        }
+
+        .category-item__metrics {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            min-width: 0;
+            margin-left: auto;
         }
 
         .category-item:hover {
@@ -390,27 +468,71 @@ $statistics = getStatistics($dbs);
         }
 
         .category-item__count {
-            font-size: 14px;
-            font-weight: 700;
+            font-size: 13px;
+            font-weight: 600;
             color: var(--primary-blue);
-            background: rgba(59, 130, 246, 0.1);
-            padding: 6px 14px;
-            border-radius: 20px;
-            min-width: 45px;
-            text-align: center;
+            background: rgba(59, 130, 246, 0.15);
+            padding: 3px 12px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            width: auto;
+            min-width: 0;
+            margin-left: auto;
         }
 
         .category-item__badge {
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-            background: rgba(16, 185, 129, 0.1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            font-size: 10px;
+            padding: 3px 12px;
+            border-radius: 999px;
+            font-weight: 700;
+            margin-left: auto;
+            background: rgba(5, 150, 105, 0.15);
             color: var(--success-green);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            white-space: nowrap;
+            flex-shrink: 0;
+            width: auto;
+            min-width: 0;
         }
 
-        /* Data Grid Section */
+        .category-item:not(.category-item--stacked) .category-item__count::before {
+            content: "\f5fd";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            display: inline-flex;
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.4);
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--primary-blue);
+        }
+
+        .category-item--stacked .category-item__count::before {
+            content: none;
+        }
+
+        .category-item__metrics .category-item__count {
+            width: auto;
+            justify-content: flex-end;
+        }
+
+        .category-item__metrics .category-item__badge {
+            width: auto;
+            margin-left: 0;
+            justify-content: flex-end;
+        }
+
         .data-section {
             background: white;
             border-radius: var(--radius-lg);
@@ -463,7 +585,6 @@ $statistics = getStatistics($dbs);
             box-shadow: var(--shadow-md);
         }
 
-        /* Table Styling */
         .biblio-class-table {
             width: 100%;
             border-collapse: separate;
@@ -516,7 +637,6 @@ $statistics = getStatistics($dbs);
             border-radius: 0 10px 10px 0;
         }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -540,7 +660,6 @@ $statistics = getStatistics($dbs);
             margin: 0;
         }
 
-        /* Modal Styles */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -636,6 +755,376 @@ $statistics = getStatistics($dbs);
             overflow-y: auto;
         }
 
+
+        .modal-data-grid {
+            display: block;
+        }
+
+        .biblio-card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .biblio-card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px 22px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) auto;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .biblio-card__title {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--text-dark);
+            margin: 0 0 10px 0;
+        }
+
+        .biblio-card__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .biblio-card__meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.12);
+            color: var(--primary-blue);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .biblio-card__meta i {
+            font-size: 12px;
+        }
+
+        .biblio-card__info {
+            font-size: 13px;
+            color: var(--text-medium);
+            line-height: 1.6;
+            display: grid;
+            gap: 8px;
+        }
+
+        .biblio-card__info strong {
+            color: var(--text-dark);
+        }
+
+        .biblio-card__actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-start;
+        }
+
+        .modal-action-btn {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-action-btn i {
+            font-size: 14px;
+        }
+
+        .modal-action-btn--view {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--primary-blue);
+        }
+
+        .modal-action-btn--view:hover {
+            background: rgba(37, 99, 235, 0.2);
+            color: var(--primary-blue-dark);
+        }
+
+        @media (max-width: 992px) {
+            .biblio-card {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .biblio-card__actions {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .biblio-card {
+                padding: 18px 18px;
+            }
+
+            .modal-action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .detail-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 10000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .detail-modal-overlay.active {
+            display: block;
+        }
+
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(720px, 94vw);
+            max-height: 90vh;
+            background: white;
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px -20px rgba(15, 23, 42, 0.35);
+            z-index: 10001;
+            animation: slideUp 0.25s ease;
+        }
+
+        .detail-modal.active {
+            display: block;
+        }
+
+        .detail-modal__header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 24px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .detail-modal__title {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            max-width: 85%;
+        }
+
+        .detail-modal__close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .detail-modal__close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .detail-modal__body {
+            padding: 26px 28px;
+            overflow-y: auto;
+            max-height: calc(90vh - 200px);
+        }
+
+        .detail-section {
+            margin-bottom: 18px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .detail-section__label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-light);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .detail-section__content {
+            font-size: 14px;
+            color: var(--text-medium);
+            line-height: 1.7;
+        }
+
+        .detail-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--primary-blue);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 999px;
+            margin-right: 10px;
+            margin-bottom: 8px;
+        }
+
+        .detail-modal__footer {
+            padding: 22px 28px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .detail-footer__meta {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .detail-footer__actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .detail-footer__actions a,
+        .detail-footer__actions button {
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .detail-footer__actions .edit-link {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+        }
+
+        .detail-footer__actions .edit-link:hover {
+            filter: brightness(1.05);
+        }
+
+        .detail-footer__actions .close-link {
+            background: rgba(15, 23, 42, 0.05);
+            color: var(--text-medium);
+        }
+
+        .detail-footer__actions .close-link:hover {
+            background: rgba(15, 23, 42, 0.08);
+            color: var(--text-dark);
+        }
+
+        .detail-section__content.detail-list strong {
+            color: var(--text-dark);
+        }
+
+        .detail-section__content.detail-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .detail-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--primary-blue);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .detail-chip i {
+            font-size: 12px;
+        }
+
+        .detail-role {
+            color: var(--text-light);
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .detail-copy-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 10px;
+        }
+
+        .detail-copy-list li {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            background: rgba(148, 163, 184, 0.12);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--text-medium);
+        }
+
+        .copy-code {
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .copy-location {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-light);
+            font-size: 12px;
+        }
+
+        .copy-location i {
+            color: var(--primary-blue);
+        }
+
+        .copy-status {
+            margin-left: auto;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--success-green);
+        }
+
+        .detail-loading {
+            padding: 40px 0;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .detail-loading i {
+            font-size: 40px;
+            color: var(--primary-blue);
+            animation: spin 1s linear infinite;
+            margin-bottom: 14px;
+        }
+
         .modal-search {
             margin-bottom: 20px;
             display: flex;
@@ -722,7 +1211,6 @@ $statistics = getStatistics($dbs);
             to { transform: rotate(360deg); }
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .stats-dashboard {
                 grid-template-columns: repeat(2, 1fr);
@@ -747,8 +1235,11 @@ $statistics = getStatistics($dbs);
             }
         }
 
-        /* Scrollbar Styling */
         .category-card__body::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .category-card__body:hover::-webkit-scrollbar {
             width: 6px;
         }
 
@@ -769,21 +1260,19 @@ $statistics = getStatistics($dbs);
 </head>
 <body>
 
-<!-- Hero Section -->
 <div class="biblio-class-hero">
     <div class="biblio-class-hero__content">
         <div class="biblio-class-hero__icon">
             <i class="fas fa-layer-group"></i>
         </div>
         <div class="biblio-class-hero__text">
-            <h1><?php echo __('Bibliography Classification & Category'); ?></h1>
-            <p><?php echo __('Comprehensive collection analysis by classification, category, and material type'); ?></p>
+            <h1>Klasifikasi & Kategori Bibliografi</h1>
+            <p>Analisis koleksi komprehensif berdasarkan klasifikasi, kategori, dan jenis bahan</p>
         </div>
     </div>
 </div>
 
 <div class="biblio-class-container">
-    <!-- Statistics Dashboard -->
     <div class="stats-dashboard">
         <div class="stat-card">
             <div class="stat-card__content">
@@ -791,7 +1280,7 @@ $statistics = getStatistics($dbs);
                     <i class="fas fa-book"></i>
                 </div>
                 <div class="stat-card__text">
-                    <div class="stat-card__label"><?php echo __('Total of Collections'); ?></div>
+                    <div class="stat-card__label">Total Koleksi</div>
                     <div class="stat-card__value"><?php echo number_format($statistics['total_biblio']); ?></div>
                 </div>
             </div>
@@ -803,7 +1292,7 @@ $statistics = getStatistics($dbs);
                     <i class="fas fa-barcode"></i>
                 </div>
                 <div class="stat-card__text">
-                    <div class="stat-card__label"><?php echo __('Total of Items'); ?></div>
+                    <div class="stat-card__label">Total Eksemplar</div>
                     <div class="stat-card__value"><?php echo number_format($statistics['total_items']); ?></div>
                 </div>
             </div>
@@ -815,7 +1304,7 @@ $statistics = getStatistics($dbs);
                     <i class="fas fa-tags"></i>
                 </div>
                 <div class="stat-card__text">
-                    <div class="stat-card__label"><?php echo __('Collection Types'); ?></div>
+                    <div class="stat-card__label">Jenis Koleksi</div>
                     <div class="stat-card__value"><?php echo count($statistics['by_collection']); ?></div>
                 </div>
             </div>
@@ -827,21 +1316,19 @@ $statistics = getStatistics($dbs);
                     <i class="fas fa-shapes"></i>
                 </div>
                 <div class="stat-card__text">
-                    <div class="stat-card__label"><?php echo __('Material Types'); ?></div>
+                    <div class="stat-card__label">Jenis Bahan</div>
                     <div class="stat-card__value"><?php echo count($statistics['by_gmd']); ?></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Category Grid -->
     <div class="category-grid">
-        <!-- General Material Designation -->
         <div class="category-card">
             <div class="category-card__header">
                 <h2 class="category-card__title">
                     <i class="fas fa-cube"></i>
-                    <?php echo __('By Material Type (GMD)'); ?>
+                    Berdasarkan Jenis Bahan (GMD)
                 </h2>
             </div>
             <div class="category-card__body">
@@ -859,48 +1346,54 @@ $statistics = getStatistics($dbs);
                 <?php else: ?>
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
-                        <p><?php echo __('No data available'); ?></p>
+                        <p>Tidak ada data</p>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
-        <!-- Collection Type -->
         <div class="category-card">
             <div class="category-card__header">
                 <h2 class="category-card__title">
                     <i class="fas fa-folder-open"></i>
-                    <?php echo __('By Collection Type'); ?>
+                    Berdasarkan Jenis Koleksi
                 </h2>
             </div>
             <div class="category-card__body">
                 <?php if (count($statistics['by_collection']) > 0): ?>
                     <?php foreach ($statistics['by_collection'] as $coll): ?>
                         <?php if ($coll['count'] > 0): ?>
-                        <div class="category-item" style="cursor: pointer;" onclick="openModal('collection', <?php echo $coll['coll_type_id']; ?>, '<?php echo addslashes($coll['coll_type_name']); ?>')">
+                        <div class="category-item category-item--stacked" style="cursor: pointer;" onclick="openModal('collection', <?php echo $coll['coll_type_id']; ?>, '<?php echo addslashes($coll['coll_type_name']); ?>')">
                             <span class="category-item__name">
                                 <?php echo htmlspecialchars($coll['coll_type_name']); ?>
                             </span>
-                            <span class="category-item__count"><?php echo number_format($coll['count']); ?></span>
-                            <span class="category-item__badge"><?php echo number_format($coll['item_count']); ?> items</span>
+                            <span class="category-item__metrics">
+                                <span class="category-item__count">
+                                    <i class="fas fa-layer-group" aria-hidden="true"></i>
+                                    <?php echo number_format($coll['count']); ?>
+                                </span>
+                                <span class="category-item__badge">
+                                    <i class="fas fa-barcode" aria-hidden="true"></i>
+                                    <?php echo number_format($coll['item_count']); ?>
+                                </span>
+                            </span>
                         </div>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
-                        <p><?php echo __('No data available'); ?></p>
+                        <p>Tidak ada data</p>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
-        <!-- Classification -->
         <div class="category-card">
             <div class="category-card__header">
                 <h2 class="category-card__title">
                     <i class="fas fa-sitemap"></i>
-                    <?php echo __('By Classification'); ?>
+                    Berdasarkan Klasifikasi
                 </h2>
             </div>
             <div class="category-card__body">
@@ -917,24 +1410,23 @@ $statistics = getStatistics($dbs);
                 <?php else: ?>
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
-                        <p><?php echo __('No data available'); ?></p>
+                        <p>Tidak ada data</p>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
-        <!-- Language -->
         <div class="category-card">
             <div class="category-card__header">
                 <h2 class="category-card__title">
                     <i class="fas fa-language"></i>
-                    <?php echo __('By Language'); ?>
+                    Berdasarkan Bahasa
                 </h2>
             </div>
             <div class="category-card__body">
                 <?php if (count($statistics['by_language']) > 0): ?>
                     <?php foreach ($statistics['by_language'] as $lang): ?>
-                        <div class="category-item" style="cursor: pointer;" onclick="openModal('language', <?php echo $lang['language_id']; ?>, '<?php echo addslashes($lang['language_name']); ?>')">
+                        <div class="category-item" style="cursor: pointer;" onclick="openModal('language', '<?php echo htmlspecialchars($lang['language_id'], ENT_QUOTES); ?>', '<?php echo addslashes($lang['language_name']); ?>')">
                             <span class="category-item__name">
                                 <?php echo htmlspecialchars($lang['language_name']); ?>
                             </span>
@@ -944,7 +1436,61 @@ $statistics = getStatistics($dbs);
                 <?php else: ?>
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
-                        <p><?php echo __('No data available'); ?></p>
+                        <p>Tidak ada data</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="category-card">
+            <div class="category-card__header">
+                <h2 class="category-card__title">
+                    <i class="fas fa-building"></i>
+                    Berdasarkan Penerbit
+                </h2>
+            </div>
+            <div class="category-card__body">
+                <?php if (count($statistics['by_publisher']) > 0): ?>
+                    <?php foreach ($statistics['by_publisher'] as $publisher): ?>
+                        <div class="category-item" style="cursor: pointer;" onclick="openModal('publisher', <?php echo (int)$publisher['publisher_id']; ?>, '<?php echo addslashes($publisher['publisher_name']); ?>')">
+                            <span class="category-item__name">
+                                <?php echo htmlspecialchars($publisher['publisher_name']); ?>
+                            </span>
+                            <span class="category-item__count"><?php echo number_format($publisher['count']); ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Tidak ada data</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="category-card">
+            <div class="category-card__header">
+                <h2 class="category-card__title">
+                    <i class="fas fa-calendar-days"></i>
+                    Berdasarkan Tahun Terbit
+                </h2>
+            </div>
+            <div class="category-card__body">
+                <?php if (count($statistics['by_year']) > 0): ?>
+                    <?php foreach ($statistics['by_year'] as $year): ?>
+                        <?php if (trim($year['publish_year']) !== ''): ?>
+                        <div class="category-item" style="cursor: pointer;" onclick="openModal('year', '<?php echo addslashes($year['publish_year']); ?>', 'Tahun <?php echo addslashes($year['publish_year']); ?>')">
+                            <span class="category-item__name">
+                                <?php echo htmlspecialchars($year['publish_year']); ?>
+                            </span>
+                            <span class="category-item__count"><?php echo number_format($year['count']); ?></span>
+                        </div>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Tidak ada data</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -952,10 +1498,7 @@ $statistics = getStatistics($dbs);
     </div>
 </div>
 
-<!-- Modal Overlay -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
-
-<!-- Modal Container -->
 <div class="modal-container" id="modalContainer">
     <div class="modal-header">
         <h3 id="modalTitle">
@@ -968,22 +1511,55 @@ $statistics = getStatistics($dbs);
     </div>
     <div class="modal-body">
         <div class="modal-search">
-            <input type="text" id="modalSearch" placeholder="<?php echo __('Search title, author, or ISBN...'); ?>">
+            <input type="text" id="modalSearch" placeholder="Cari judul, pengarang, atau ISBN...">
             <button onclick="performSearch()">
                 <i class="fas fa-search"></i>
-                <?php echo __('Search'); ?>
+                Cari
             </button>
         </div>
         <div class="modal-data-grid" id="modalDataGrid">
             <div class="modal-loading">
                 <i class="fas fa-spinner"></i>
-                <p><?php echo __('Loading data...'); ?></p>
+                <p>Memuat data...</p>
             </div>
         </div>
     </div>
 </div>
 
+<div class="detail-modal-overlay" id="detailModalOverlay" onclick="closeDetailModal(event)"></div>
+<div class="detail-modal" id="detailModal">
+    <div class="detail-modal__header">
+        <h3 class="detail-modal__title" id="detailModalTitle">Detail Bibliografi</h3>
+        <button class="detail-modal__close" type="button" onclick="closeDetailModal(event)">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="detail-modal__body" id="detailModalBody">
+        <div class="detail-loading">
+            <i class="fas fa-spinner"></i>
+            <p>Memuat detail...</p>
+        </div>
+    </div>
+    <div class="detail-modal__footer">
+        <div class="detail-footer__meta" id="detailModalMeta"></div>
+        <div class="detail-footer__actions">
+            <button type="button" class="edit-link notAJAX" id="detailModalEdit" onclick="openBibliographyEditor();">
+                <i class="fas fa-pen-to-square"></i> Edit Bibliografi
+            </button>
+            <a href="javascript:void(0)" class="close-link" onclick="closeDetailModal(event)">
+                <i class="fas fa-times-circle"></i> Tutup
+            </a>
+        </div>
+    </div>
+</div>
+
 <script>
+const modalDataEndpoint = <?php echo json_encode(MWB . 'bibliography/bibliography_class_data.php'); ?>;
+const modalDetailEndpoint = <?php echo json_encode(MWB . 'bibliography/bibliography_class_detail.php'); ?>;
+const adminIndexBase = <?php echo json_encode(SWB . 'admin/index.php'); ?>;
+const moduleEditEndpoint = <?php echo json_encode(MWB . 'bibliography/index.php'); ?>;
+const detailLoadingTemplate = '<div class="detail-loading"><i class="fas fa-spinner"></i><p>Memuat detail...</p></div>';
+
 let currentFilter = {
     type: '',
     value: 0,
@@ -998,17 +1574,25 @@ function openModal(type, value, label, classCode = '') {
     let titleText = '';
     switch(type) {
         case 'gmd':
-            titleText = '<?php echo __('Material Type'); ?>: ' + label;
+            titleText = 'Jenis Bahan: ' + label;
             break;
         case 'collection':
-            titleText = '<?php echo __('Collection Type'); ?>: ' + label;
+            titleText = 'Jenis Koleksi: ' + label;
             break;
         case 'classification':
-            titleText = '<?php echo __('Classification'); ?>: ' + label;
+            titleText = 'Klasifikasi: ' + label;
             break;
         case 'language':
-            titleText = '<?php echo __('Language'); ?>: ' + label;
+            titleText = 'Bahasa: ' + label;
             break;
+        case 'publisher':
+            titleText = 'Penerbit: ' + label;
+            break;
+        case 'year':
+            titleText = 'Tahun Terbit: ' + label;
+            break;
+        default:
+            titleText = 'Data Terfilter';
     }
     document.getElementById('modalTitleText').textContent = titleText;
 
@@ -1028,7 +1612,7 @@ function closeModal() {
 
 function loadModalData(searchQuery = '') {
     const dataGrid = document.getElementById('modalDataGrid');
-    dataGrid.innerHTML = '<div class="modal-loading"><i class="fas fa-spinner"></i><p><?php echo __('Loading data...'); ?></p></div>';
+    dataGrid.innerHTML = '<div class="modal-loading"><i class="fas fa-spinner"></i><p>Memuat data...</p></div>';
 
     // Build query parameters
     let params = new URLSearchParams();
@@ -1044,69 +1628,143 @@ function loadModalData(searchQuery = '') {
 
     console.log('Fetching with params:', params.toString());
 
-    // Fetch data from separate AJAX handler file
-    fetch('bibliography_class_ajax.php?' + params.toString())
+    // Fetch data as HTML from dedicated endpoint
+    fetch(`${modalDataEndpoint}?${params.toString()}`, { credentials: 'same-origin' })
         .then(response => {
-            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
             return response.text();
         })
-        .then(text => {
-            console.log('Response text:', text);
-            try {
-                const data = JSON.parse(text);
-                console.log('Parsed data:', data);
-
-                if (!data.success) {
-                    throw new Error(data.error || 'Unknown error');
-                }
-
-                if (data.data && data.data.length > 0) {
-                    let html = '<table><thead><tr>';
-                    html += '<th><?php echo __('Title'); ?></th>';
-                    html += '<th><?php echo __('Author'); ?></th>';
-                    html += '<th><?php echo __('Classification'); ?></th>';
-                    html += '<th><?php echo __('Year'); ?></th>';
-                    html += '<th><?php echo __('ISBN/ISSN'); ?></th>';
-                    html += '<th><?php echo __('Copies'); ?></th>';
-                    html += '<th><?php echo __('Action'); ?></th>';
-                    html += '</tr></thead><tbody>';
-
-                    data.data.forEach(row => {
-                        html += '<tr>';
-                        html += '<td><strong>' + escapeHtml(row.title) + '</strong></td>';
-                        html += '<td>' + escapeHtml(row.author) + '</td>';
-                        html += '<td>' + escapeHtml(row.classification) + '</td>';
-                        html += '<td>' + escapeHtml(row.publish_year) + '</td>';
-                        html += '<td>' + escapeHtml(row.isbn_issn) + '</td>';
-                        html += '<td><span style="background:#dbeafe;color:#3b82f6;padding:4px 8px;border-radius:6px;font-weight:600;font-size:12px;">' + row.copies + '</span></td>';
-                        html += '<td><a href="index.php?action=detail&id=' + row.biblio_id + '" target="_blank" style="color:#3b82f6;text-decoration:none;"><i class="fas fa-eye"></i> <?php echo __('View'); ?></a></td>';
-                        html += '</tr>';
-                    });
-
-                    html += '</tbody></table>';
-
-                    // Add debug info
-                    if (data.sql) {
-                        html += '<div style="margin-top:20px;padding:10px;background:#f8fafc;border-radius:8px;font-size:11px;color:#64748b;"><strong>Debug SQL:</strong><br><code>' + escapeHtml(data.sql) + '</code></div>';
-                    }
-
-                    dataGrid.innerHTML = html;
-                } else {
-                    let debugInfo = '';
-                    if (data.sql) {
-                        debugInfo = '<br><small style="color:#64748b;">SQL: ' + escapeHtml(data.sql) + '</small>';
-                    }
-                    dataGrid.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><h3><?php echo __('No Results Found'); ?></h3><p><?php echo __('No bibliographies match the selected filter.'); ?></p>' + debugInfo + '</div>';
-                }
-            } catch (parseError) {
-                console.error('Parse error:', parseError);
-                dataGrid.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3><?php echo __('Error'); ?></h3><p>Parse error: ' + escapeHtml(parseError.message) + '</p><pre style="text-align:left;font-size:11px;overflow:auto;max-height:200px;">' + escapeHtml(text.substring(0, 1000)) + '</pre></div>';
+        .then(html => {
+            if (!html.trim()) {
+                dataGrid.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error</h3><p>Tidak ada konten dari server.</p></div>';
+                return;
             }
+            dataGrid.innerHTML = html;
         })
         .catch(error => {
             console.error('Fetch error:', error);
-            dataGrid.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3><?php echo __('Error'); ?></h3><p>' + escapeHtml(error.message) + '</p></div>';
+            dataGrid.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error</h3><p>' + escapeHtml(error.message) + '</p></div>';
         });
+}
+
+function showBiblioDetail(biblioId) {
+    if (!biblioId) {
+        return;
+    }
+    const overlay = document.getElementById('detailModalOverlay');
+    const modal = document.getElementById('detailModal');
+    const title = document.getElementById('detailModalTitle');
+    const meta = document.getElementById('detailModalMeta');
+    const editLink = document.getElementById('detailModalEdit');
+
+    title.textContent = 'Detail Bibliografi';
+    const body = document.getElementById('detailModalBody');
+    body.innerHTML = '<div class="detail-loading"><i class="fas fa-spinner"></i><p>Memuat detail...</p></div>';
+    meta.textContent = '';
+    editLink.dataset.biblioId = '';
+    editLink.dataset.editUrl = '';
+    editLink.dataset.moduleUrl = '';
+
+    overlay.classList.add('active');
+    modal.classList.add('active');
+
+    const params = new URLSearchParams();
+    params.append('id', biblioId);
+
+    fetch(`${modalDetailEndpoint}?${params.toString()}`, { credentials: 'same-origin' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(payload => {
+            if (!payload.success) {
+                throw new Error(payload.error || 'Unable to load detail');
+            }
+            title.textContent = payload.title || 'Detail Bibliografi';
+            body.innerHTML = payload.html || '';
+            meta.textContent = payload.meta || '';
+            const biblioId = payload.id || '';
+            const defaultEditUrl = `${adminIndexBase}?mod=bibliography&action=detail&detail=true&itemID=${encodeURIComponent(biblioId)}`;
+            editLink.dataset.biblioId = biblioId;
+            editLink.dataset.editUrl = payload.adminEditUrl || defaultEditUrl;
+            editLink.dataset.moduleUrl = payload.moduleEditUrl || moduleEditEndpoint;
+        })
+        .catch(error => {
+            console.error('Detail fetch error:', error);
+            if (body) {
+                body.innerHTML = '<div class="detail-loading"><i class="fas fa-circle-exclamation"></i><p>' + escapeHtml(error.message) + '</p></div>';
+            }
+        });
+}
+
+function closeDetailModal(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const overlay = document.getElementById('detailModalOverlay');
+    const modal = document.getElementById('detailModal');
+    if (overlay) overlay.classList.remove('active');
+    if (modal) modal.classList.remove('active');
+
+    const body = document.getElementById('detailModalBody');
+    if (body) {
+        body.innerHTML = detailLoadingTemplate;
+        body.scrollTop = 0;
+    }
+    const meta = document.getElementById('detailModalMeta');
+    if (meta) {
+        meta.textContent = '';
+    }
+    const editLink = document.getElementById('detailModalEdit');
+    if (editLink) {
+        editLink.dataset.biblioId = '';
+        editLink.dataset.editUrl = '';
+        editLink.dataset.moduleUrl = '';
+    }
+}
+
+function openBibliographyEditor() {
+    const editLink = document.getElementById('detailModalEdit');
+    if (!editLink) {
+        return;
+    }
+    const biblioId = editLink.dataset.biblioId || '';
+    if (!biblioId) {
+        return;
+    }
+    const moduleUrl = editLink.dataset.moduleUrl || moduleEditEndpoint;
+    const fallbackUrl = editLink.dataset.editUrl || `${moduleUrl}?itemID=${encodeURIComponent(biblioId)}&detail=true`;
+
+    try {
+        closeDetailModal();
+        closeModal();
+    } catch (err) {
+        console.warn('Unable to close modal before navigating', err);
+    }
+
+    try {
+        const topWindow = window.top || window;
+        if (topWindow && topWindow.$ && typeof topWindow.$('#mainContent').simbioAJAX === 'function') {
+            topWindow.$('#mainContent').simbioAJAX(moduleUrl, {
+                method: 'post',
+                addData: `itemID=${encodeURIComponent(biblioId)}&detail=true`
+            });
+            return;
+        }
+    } catch (err) {
+        console.error('Failed to use AJAX editor path', err);
+    }
+
+    if (window.top) {
+        window.top.location.href = fallbackUrl;
+    } else {
+        window.location.href = fallbackUrl;
+    }
 }
 
 function performSearch() {
@@ -1116,11 +1774,21 @@ function performSearch() {
 
 // Allow Enter key to search
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('modalSearch').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
+    const modalSearch = document.getElementById('modalSearch');
+    if (modalSearch) {
+        modalSearch.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
+    const editLink = document.getElementById('detailModalEdit');
+    if (editLink) {
+        editLink.addEventListener('click', function(ev) {
+            ev.preventDefault();
+            openBibliographyEditor();
+        });
+    }
 });
 
 function escapeHtml(text) {
