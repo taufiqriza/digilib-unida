@@ -117,50 +117,70 @@ class BranchManager
     }
 
     /**
-     * Get branch by ID
+     * Get branch by ID (mysqli version)
      */
     public function getById($id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM branches WHERE branch_id = ? AND is_active = 1");
-        $stmt->execute([$id]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        $id = (int)$id;
+        $result = $this->db->query("SELECT * FROM branches WHERE branch_id = {$id} AND is_active = 1");
+        if ($result && $result->num_rows > 0) {
+            return $result->fetch_assoc();
+        }
+        return null;
     }
 
     /**
-     * Get branch by subdomain
+     * Get branch by subdomain (mysqli version)
      */
     public function getBySubdomain($subdomain)
     {
-        $stmt = $this->db->prepare("SELECT * FROM branches WHERE branch_subdomain = ? AND is_active = 1");
-        $stmt->execute([$subdomain]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        $subdomain = $this->db->escape_string($subdomain);
+        $result = $this->db->query("SELECT * FROM branches WHERE branch_subdomain = '{$subdomain}' AND is_active = 1");
+        if ($result && $result->num_rows > 0) {
+            return $result->fetch_assoc();
+        }
+        return null;
     }
 
     /**
-     * Get main branch
+     * Get main branch (mysqli version)
      */
     public function getMainBranch()
     {
-        $stmt = $this->db->query("SELECT * FROM branches WHERE is_main_branch = 1 AND is_active = 1 LIMIT 1");
-        $branch = $stmt->fetch(\PDO::FETCH_ASSOC);
-        
-        if (!$branch) {
-            // Fallback to first branch
-            $stmt = $this->db->query("SELECT * FROM branches WHERE is_active = 1 ORDER BY branch_id LIMIT 1");
-            $branch = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result = $this->db->query("SELECT * FROM branches WHERE is_main_branch = 1 AND is_active = 1 LIMIT 1");
+        if ($result && $result->num_rows > 0) {
+            return $result->fetch_assoc();
         }
         
-        return $branch;
+        // Fallback to first branch
+        $result = $this->db->query("SELECT * FROM branches WHERE is_active = 1 ORDER BY branch_id LIMIT 1");
+        if ($result && $result->num_rows > 0) {
+            return $result->fetch_assoc();
+        }
+        
+        // Return default if no branches exist
+        return [
+            'branch_id' => 1,
+            'branch_code' => 'MAIN',
+            'branch_name' => 'Default Branch',
+            'is_main_branch' => 1,
+            'is_active' => 1
+        ];
     }
 
     /**
-     * Get all active branches
+     * Get all active branches (mysqli version)
      */
     public function getAllBranches()
     {
         if (self::$allBranches === null) {
-            $stmt = $this->db->query("SELECT * FROM branches WHERE is_active = 1 ORDER BY branch_name");
-            self::$allBranches = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            self::$allBranches = [];
+            $result = $this->db->query("SELECT * FROM branches WHERE is_active = 1 ORDER BY branch_name");
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    self::$allBranches[] = $row;
+                }
+            }
         }
         return self::$allBranches;
     }
@@ -170,29 +190,25 @@ class BranchManager
      */
     public function getStats($branchId = null)
     {
-        $branchId = $branchId ?? self::getCurrentBranchId();
+        $branchId = (int)($branchId ?? self::getCurrentBranchId());
         
         $stats = [];
         
         // Total biblio
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM biblio WHERE branch_id = ?");
-        $stmt->execute([$branchId]);
-        $stats['total_biblio'] = $stmt->fetchColumn();
+        $result = $this->db->query("SELECT COUNT(*) as cnt FROM biblio WHERE branch_id = {$branchId}");
+        $stats['total_biblio'] = $result ? $result->fetch_assoc()['cnt'] : 0;
         
         // Total items
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM item WHERE branch_id = ?");
-        $stmt->execute([$branchId]);
-        $stats['total_items'] = $stmt->fetchColumn();
+        $result = $this->db->query("SELECT COUNT(*) as cnt FROM item WHERE branch_id = {$branchId}");
+        $stats['total_items'] = $result ? $result->fetch_assoc()['cnt'] : 0;
         
         // Total members
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM member WHERE branch_id = ?");
-        $stmt->execute([$branchId]);
-        $stats['total_members'] = $stmt->fetchColumn();
+        $result = $this->db->query("SELECT COUNT(*) as cnt FROM member WHERE branch_id = {$branchId}");
+        $stats['total_members'] = $result ? $result->fetch_assoc()['cnt'] : 0;
         
         // Active loans
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM loan WHERE branch_id = ? AND is_return = 0");
-        $stmt->execute([$branchId]);
-        $stats['active_loans'] = $stmt->fetchColumn();
+        $result = $this->db->query("SELECT COUNT(*) as cnt FROM loan WHERE branch_id = {$branchId} AND is_return = 0");
+        $stats['active_loans'] = $result ? $result->fetch_assoc()['cnt'] : 0;
         
         return $stats;
     }
