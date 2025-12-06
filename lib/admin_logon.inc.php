@@ -123,6 +123,10 @@ class admin_logon
         $_SESSION['biblioAuthor'] = array();
         $_SESSION['biblioTopic'] = array();
         $_SESSION['biblioAttach'] = array();
+        
+        // Multi-branch: Set super admin flag
+        $_SESSION['is_super_admin'] = isset($this->user_info['is_super_admin']) ? (int)$this->user_info['is_super_admin'] : 0;
+        $_SESSION['user_branch_id'] = isset($this->user_info['branch_id']) ? (int)$this->user_info['branch_id'] : 1;
 
         if (!defined('UCS_VERSION')) {
             // load holiday data from database

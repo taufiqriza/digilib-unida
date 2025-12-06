@@ -66,6 +66,7 @@
     </style>
 </head>
 <body>
+<?php @include __DIR__ . '/branch_selector.inc.php'; ?>
 
 <header id="header">
     <nav id="mainMenu">
