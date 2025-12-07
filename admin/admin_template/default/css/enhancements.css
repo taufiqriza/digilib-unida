@@ -1,0 +1,325 @@
+/**
+ * SLiMS Filament-Style Layout
+ * Full sidebar navigation, minimal top bar
+ */
+
+/* ============================================
+   HIDE TOP MENU - Move to Sidebar
+   ============================================ */
+#header {
+    left: 260px !important;
+    height: 56px !important;
+    background: #fff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 24px !important;
+    transition: left 0.2s ease !important;
+}
+
+#header #mainMenu {
+    display: none !important;
+}
+
+/* Top bar content */
+#header::before {
+    content: '';
+    flex: 1;
+}
+
+/* ============================================
+   SIDEBAR - Filament Style
+   ============================================ */
+#sidepan {
+    width: 260px !important;
+    background: #111827 !important;
+    transition: width 0.2s ease !important;
+    z-index: 1000 !important;
+}
+
+#sidepan::before {
+    display: none !important;
+}
+
+#sidepan .s-user {
+    padding: 16px 20px !important;
+    background: rgba(255,255,255,0.05) !important;
+    margin: 12px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+#sidepan .s-user::after {
+    display: none !important;
+}
+
+#sidepan .s-user-photo {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+}
+
+#sidepan .s-user-name {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+}
+
+#sidepan .s-user a {
+    color: #9ca3af !important;
+    font-size: 12px !important;
+}
+
+/* Menu Header */
+#sidepan .subMenuHeader {
+    padding: 24px 20px 8px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #6b7280 !important;
+    background: none !important;
+}
+
+/* Menu Items */
+#sidepan .subMenuItem {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 20px !important;
+    margin: 2px 12px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #d1d5db !important;
+    border-radius: 8px !important;
+    transition: all 0.15s ease !important;
+    background: transparent !important;
+}
+
+#sidepan .subMenuItem:hover {
+    background: rgba(255,255,255,0.05) !important;
+    color: #fff !important;
+}
+
+#sidepan .subMenuItem.curModuleLink {
+    background: #fdba74 !important;
+    color: #111827 !important;
+}
+
+#sidepan .subMenuItem:first-child {
+    background: rgba(239,68,68,0.15) !important;
+    color: #fca5a5 !important;
+    margin-top: 8px !important;
+}
+
+#sidepan .subMenuItem:first-child:hover {
+    background: rgba(239,68,68,0.25) !important;
+}
+
+/* Menu Icons */
+#sidepan .subMenuItem::before {
+    font-family: 'FontAwesome' !important;
+    font-size: 16px !important;
+    width: 20px !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+}
+
+#sidepan .subMenuItem::before { content: '\f105'; }
+#sidepan .subMenuItem:first-child::before { content: '\f00d'; }
+#sidepan .subMenuItem[href*="biblio"]::before { content: '\f02d'; }
+#sidepan .subMenuItem[href*="item"]::before { content: '\f0c5'; }
+#sidepan .subMenuItem[href*="checkout"]::before { content: '\f08b'; }
+#sidepan .subMenuItem[href*="checkin"]::before,
+#sidepan .subMenuItem[href*="return"]::before { content: '\f090'; }
+#sidepan .subMenuItem[href*="loan"]::before { content: '\f0ec'; }
+#sidepan .subMenuItem[href*="member"]::before { content: '\f007'; }
+#sidepan .subMenuItem[href*="mst_"]::before { content: '\f1c0'; }
+#sidepan .subMenuItem[href*="author"]::before { content: '\f007'; }
+#sidepan .subMenuItem[href*="topic"]::before { content: '\f02c'; }
+#sidepan .subMenuItem[href*="publisher"]::before { content: '\f1ad'; }
+#sidepan .subMenuItem[href*="place"]::before,
+#sidepan .subMenuItem[href*="location"]::before { content: '\f041'; }
+#sidepan .subMenuItem[href*="coll_type"]::before { content: '\f114'; }
+#sidepan .subMenuItem[href*="stock"]::before { content: '\f0ae'; }
+#sidepan .subMenuItem[href*="module"]::before { content: '\f12e'; }
+#sidepan .subMenuItem[href*="user"]::before,
+#sidepan .subMenuItem[href*="group"]::before { content: '\f0c0'; }
+#sidepan .subMenuItem[href*="backup"]::before { content: '\f0c7'; }
+#sidepan .subMenuItem[href*="content"]::before { content: '\f15c'; }
+#sidepan .subMenuItem[href*="report"]::before { content: '\f1c1'; }
+#sidepan .subMenuItem[href*="stat"]::before { content: '\f080'; }
+#sidepan .subMenuItem[href*="serial"]::before { content: '\f1ea'; }
+#sidepan .subMenuItem[href*="branch"]::before { content: '\f1ad'; }
+#sidepan .subMenuItem[href*="import"]::before { content: '\f019'; }
+#sidepan .subMenuItem[href*="export"]::before { content: '\f093'; }
+#sidepan .subMenuItem[href*="print"]::before { content: '\f02f'; }
+#sidepan .subMenuItem[href*="barcode"]::before { content: '\f02a'; }
+#sidepan .subMenuItem[href*="search"]::before { content: '\f002'; }
+#sidepan .subMenuItem[href*="setting"]::before { content: '\f085'; }
+#sidepan .subMenuItem[href*="holiday"]::before { content: '\f073'; }
+#sidepan .subMenuItem[href*="fine"]::before { content: '\f0d6'; }
+#sidepan .subMenuItem[href*="reserve"]::before { content: '\f017'; }
+#sidepan .subMenuItem[href*="_form"]::before { content: '\f067'; }
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+#mainContent {
+    margin-left: 260px !important;
+    margin-top: 56px !important;
+    padding: 24px !important;
+    background: #f9fafb !important;
+    min-height: calc(100vh - 56px) !important;
+    transition: margin-left 0.2s ease !important;
+}
+
+footer {
+    margin-left: 260px !important;
+    background: #f9fafb !important;
+    border-top: 1px solid #e5e7eb !important;
+    transition: margin-left 0.2s ease !important;
+}
+
+/* ============================================
+   TOGGLE BUTTON - In Header
+   ============================================ */
+#sidebarToggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    background: #f3f4f6 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    color: #374151 !important;
+    font-size: 16px !important;
+    transition: all 0.15s ease !important;
+    position: absolute !important;
+    left: 24px !important;
+}
+
+#sidebarToggle:hover {
+    background: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+/* ============================================
+   COLLAPSED STATE
+   ============================================ */
+body.sidebar-collapsed #sidepan {
+    width: 72px !important;
+}
+
+body.sidebar-collapsed #sidepan .s-user {
+    padding: 12px !important;
+    margin: 8px !important;
+    justify-content: center !important;
+}
+
+body.sidebar-collapsed #sidepan .s-user-name,
+body.sidebar-collapsed #sidepan .s-user > a:not(.s-user-photo),
+body.sidebar-collapsed #sidepan .subMenuHeader {
+    display: none !important;
+}
+
+body.sidebar-collapsed #sidepan .s-user-photo {
+    width: 36px !important;
+    height: 36px !important;
+}
+
+body.sidebar-collapsed #sidepan .subMenuItem {
+    padding: 12px !important;
+    margin: 4px 8px !important;
+    justify-content: center !important;
+}
+
+body.sidebar-collapsed #sidepan .subMenuItem span {
+    display: none !important;
+}
+
+body.sidebar-collapsed #sidepan .subMenuItem::before {
+    margin: 0 !important;
+}
+
+body.sidebar-collapsed #sidepan .subMenuItem:first-child {
+    width: 44px !important;
+    height: 44px !important;
+    margin: 8px auto !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body.sidebar-collapsed #header {
+    left: 72px !important;
+}
+
+body.sidebar-collapsed #mainContent {
+    margin-left: 72px !important;
+}
+
+body.sidebar-collapsed footer {
+    margin-left: 72px !important;
+}
+
+/* ============================================
+   CARDS & COMPONENTS
+   ============================================ */
+.menuBox {
+    background: #fff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+.menuBoxInner {
+    padding: 16px 20px !important;
+    background: none !important;
+}
+
+.menuBoxInner::before {
+    display: none !important;
+}
+
+.per_title h2 {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    background: none !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1024px) {
+    #sidepan {
+        transform: translateX(-100%) !important;
+        width: 280px !important;
+    }
+    
+    #sidepan.show {
+        transform: translateX(0) !important;
+        box-shadow: 4px 0 16px rgba(0,0,0,0.2) !important;
+    }
+    
+    #header {
+        left: 0 !important;
+    }
+    
+    #mainContent, footer {
+        margin-left: 0 !important;
+    }
+    
+    body.sidebar-collapsed #header { left: 0 !important; }
+    body.sidebar-collapsed #mainContent { margin-left: 0 !important; }
+    body.sidebar-collapsed footer { margin-left: 0 !important; }
+}

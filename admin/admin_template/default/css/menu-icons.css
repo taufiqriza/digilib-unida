@@ -1,0 +1,138 @@
+/**
+ * Menu Icons for Navbar and Sidebar
+ */
+
+/* Navbar Module Icons */
+#mainMenu .menu::before {
+  font-family: 'FontAwesome';
+  margin-right: 6px;
+}
+
+#mainMenu .menu.home::before { content: '\f015'; }
+#mainMenu .menu.opac::before { content: '\f0ac'; }
+#mainMenu .menu.bibliography::before { content: '\f02d'; }
+#mainMenu .menu.circulation::before { content: '\f0ec'; }
+#mainMenu .menu.membership::before { content: '\f0c0'; }
+#mainMenu .menu.master_file::before { content: '\f1c0'; }
+#mainMenu .menu.Cacah_Jiwo::before,
+#mainMenu .menu.stock_take::before { content: '\f187'; }
+#mainMenu .menu.system::before { content: '\f013'; }
+#mainMenu .menu.reporting::before { content: '\f080'; }
+#mainMenu .menu.serial_control::before { content: '\f1ea'; }
+#mainMenu .menu.wakaf::before { content: '\f06b'; }
+#mainMenu .menu.barista::before { content: '\f0f4'; }
+#mainMenu .menu.locker_loan::before,
+#mainMenu .menu.Locker_Loan::before { content: '\f023'; }
+#mainMenu .menu.logout::before { content: '\f08b'; }
+
+/* Hide from navbar - shown in Home sidebar instead */
+#mainMenu .menu.logout,
+#mainMenu .menu.branch_management,
+#mainMenu .menu.Cabang {
+  display: none !important;
+}
+
+/* Sidebar Submenu Icons */
+#sidepan .subMenuItem::before {
+  font-family: 'FontAwesome';
+  margin-right: 8px;
+  width: 16px;
+  display: inline-block;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* Hide ::before for items that already have inline icon */
+#sidepan .subMenuItem:has(> i.fa)::before {
+  display: none !important;
+}
+
+/* Home Sidebar */
+#sidepan .subMenuItem[href*="app_user"]::before { content: '\f007'; }
+#sidepan .subMenuItem[href*="shortcut"]::before { content: '\f0c1'; }
+#sidepan .subMenuItem[href*="theme"]::before { content: '\f1fc'; }
+#sidepan .subMenuItem[href*="logout"]::before { display: none; }
+
+/* Branch Management */
+#sidepan .subMenuItem[href*="branch_management/index"]::before { content: '\f0e8'; }
+#sidepan .subMenuItem[href*="branch_form"]::before { content: '\f067'; }
+
+/* Bibliography */
+#sidepan .subMenuItem[href*="bibliography/index"]::before { content: '\f02d'; }
+#sidepan .subMenuItem[href*="checkout_item"]::before { content: '\f08b'; }
+#sidepan .subMenuItem[href*="item_barcode"]::before { content: '\f02a'; }
+#sidepan .subMenuItem[href*="label"]::before { content: '\f02b'; }
+#sidepan .subMenuItem[href*="p2p"]::before { content: '\f0c1'; }
+#sidepan .subMenuItem[href*="z3950"]::before { content: '\f002'; }
+#sidepan .subMenuItem[href*="import"]::before { content: '\f019'; }
+#sidepan .subMenuItem[href*="export"]::before { content: '\f093'; }
+
+/* Circulation */
+#sidepan .subMenuItem[href*="circulation/index"]::before { content: '\f0ec'; }
+#sidepan .subMenuItem[href*="quick_return"]::before { content: '\f064'; }
+#sidepan .subMenuItem[href*="loan_list"]::before { content: '\f03a'; }
+#sidepan .subMenuItem[href*="loan_history"]::before { content: '\f1da'; }
+#sidepan .subMenuItem[href*="overdued"]::before { content: '\f071'; }
+#sidepan .subMenuItem[href*="reservation"]::before { content: '\f017'; }
+#sidepan .subMenuItem[href*="fines"]::before { content: '\f0d6'; }
+
+/* Membership */
+#sidepan .subMenuItem[href*="membership/index"]::before { content: '\f0c0'; }
+#sidepan .subMenuItem[href*="member_type"]::before { content: '\f0c0'; }
+#sidepan .subMenuItem[href*="member_card"]::before { content: '\f2c2'; }
+
+/* Master File */
+#sidepan .subMenuItem[href*="gmd"]::before { content: '\f1c5'; }
+#sidepan .subMenuItem[href*="publisher"]::before { content: '\f1ad'; }
+#sidepan .subMenuItem[href*="supplier"]::before { content: '\f0d1'; }
+#sidepan .subMenuItem[href*="author"]::before { content: '\f007'; }
+#sidepan .subMenuItem[href*="subject"]::before { content: '\f02c'; }
+#sidepan .subMenuItem[href*="location"]::before { content: '\f041'; }
+#sidepan .subMenuItem[href*="place"]::before { content: '\f279'; }
+#sidepan .subMenuItem[href*="item_status"]::before { content: '\f05d'; }
+#sidepan .subMenuItem[href*="coll_type"]::before { content: '\f07b'; }
+#sidepan .subMenuItem[href*="doc_language"]::before { content: '\f1ab'; }
+#sidepan .subMenuItem[href*="label"]::before { content: '\f02b'; }
+#sidepan .subMenuItem[href*="frequency"]::before { content: '\f073'; }
+
+/* Stock Take */
+#sidepan .subMenuItem[href*="stock_take/index"]::before { content: '\f187'; }
+#sidepan .subMenuItem[href*="init"]::before { content: '\f04b'; }
+#sidepan .subMenuItem[href*="current"]::before { content: '\f0ae'; }
+#sidepan .subMenuItem[href*="history"]::before { content: '\f1da'; }
+
+/* System */
+#sidepan .subMenuItem[href*="system/index"]::before { content: '\f013'; }
+#sidepan .subMenuItem[href*="app_user"]::before { content: '\f007'; }
+#sidepan .subMenuItem[href*="user_group"]::before { content: '\f0c0'; }
+#sidepan .subMenuItem[href*="module"]::before { content: '\f12e'; }
+#sidepan .subMenuItem[href*="content"]::before { content: '\f15c'; }
+#sidepan .subMenuItem[href*="biblio_indexes"]::before { content: '\f002'; }
+#sidepan .subMenuItem[href*="backup"]::before { content: '\f0c7'; }
+#sidepan .subMenuItem[href*="log"]::before { content: '\f15c'; }
+#sidepan .subMenuItem[href*="holiday"]::before { content: '\f073'; }
+#sidepan .subMenuItem[href*="barcode"]::before { content: '\f02a'; }
+
+/* Reporting */
+#sidepan .subMenuItem[href*="reporting/index"]::before { content: '\f080'; }
+#sidepan .subMenuItem[href*="stat"]::before { content: '\f201'; }
+#sidepan .subMenuItem[href*="report"]::before { content: '\f1c1'; }
+#sidepan .subMenuItem[href*="visitor"]::before { content: '\f0c0'; }
+#sidepan .subMenuItem[href*="loan_report"]::before { content: '\f0ec'; }
+#sidepan .subMenuItem[href*="member_report"]::before { content: '\f0c0'; }
+#sidepan .subMenuItem[href*="collection"]::before { content: '\f02d'; }
+#sidepan .subMenuItem[href*="recapitulation"]::before { content: '\f0ce'; }
+
+/* Serial Control */
+#sidepan .subMenuItem[href*="serial_control/index"]::before { content: '\f1ea'; }
+#sidepan .subMenuItem[href*="kardex"]::before { content: '\f0ce'; }
+#sidepan .subMenuItem[href*="subscription"]::before { content: '\f0f6'; }
+
+/* Default icon for unmatched items */
+#sidepan .subMenuItem:not([href*="logout"])::before {
+  content: '\f105';
+}
+
+/* Override specific icons (higher specificity) */
+#sidepan .subMenuItem[href*="index.php?action=detail"]::before { content: '\f067'; }
+#sidepan .subMenuItem[href*="action=detail"]::before { content: '\f067'; }

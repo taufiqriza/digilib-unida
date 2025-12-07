@@ -28,9 +28,7 @@
     <link href="<?php echo JWB; ?>jquery.imgareaselect/css/imgareaselect-default.css" rel="stylesheet" type="text/css" />
     <link href="<?php echo JWB; ?>datepicker/css/datepicker-bs4.min.css" rel="stylesheet" />
     <link href="<?php echo $sysconf['admin_template']['css'].'?'.date('this'); ?>" rel="stylesheet" type="text/css" />
-    <!-- Modern Theme -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="<?php echo AWB; ?>admin_template/<?php echo $sysconf['admin_template']['theme']?>/css/modern-theme.css?v=<?php echo date('YmdHis'); ?>" rel="stylesheet" type="text/css" />
+    <link href="<?php echo AWB; ?>admin_template/<?php echo $sysconf['admin_template']['theme']?>/css/menu-icons.css?v=<?php echo date('YmdH'); ?>" rel="stylesheet" type="text/css" />
 
     <script type="text/javascript" src="<?php echo JWB; ?>jquery.js"></script>
     <script type="text/javascript" src="<?php echo AWB; ?>admin_template/<?php echo $sysconf['admin_template']['theme']?>/vendor/slimscroll/jquery.slimscroll.min.js"></script>
@@ -66,6 +64,26 @@
         #sidepan .scroll-content {
             padding: 0;
         }
+        #header-logout {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        #header-logout:hover {
+            background: #dc3545;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -75,10 +93,12 @@
     <nav id="mainMenu">
         <?php echo $main_menu; ?>
     </nav>
+    <a href="<?php echo AWB; ?>logout.php" id="header-logout" title="<?php echo __('Logout'); ?>">
+        <i class="fa fa-power-off"></i>
+    </a>
 </header>
     
 <nav id="sidepan">
-<?php @include __DIR__ . '/sidebar_brand.inc.php'; ?>
     <div class="s-user" id="profile">
         <div class="s-user-frame">
             <a href="<?php echo MWB.'system/app_user.php?changecurrent=true&action=detail'; ?>" class="s-user-photo subMenuItem">
@@ -113,12 +133,6 @@
     <?php echo $main_content; ?>
 </div>
 
-<div id="help">
-  <a href="#" name="top" class="s-help d-none"><i class="fa fa-question-circle"></i></a>
-  <a href="#" name="top" class="s-close d-none"><i class="fa fa-times"></i></a>
-  <div class="s-help-content animated fade-in d-none"><!-- Place to put documentation --></div>
-</div>
-
 <footer>
     <div class="row">
         <div class="col-md-6"><?php echo SENAYAN_VERSION; ?></div>
@@ -128,8 +142,6 @@
 
 <!-- fake submit iframe for search form, DONT REMOVE THIS! -->
 <iframe name="blindSubmit" style="display: none; visibility: hidden; width: 0; height: 0;"></iframe>
-<!-- <iframe name="blindSubmit" style="visibility: visible; width: 100%; height: 300px;"></iframe> -->
-<!-- fake submit iframe -->
 
 <script>
 $('.loader').toggleClass('hidden').hide();
@@ -145,42 +157,8 @@ Scrollbar.init(document.querySelector('#sidepan'), {
       },
     }
 });
-$('.s-close').click(function(e){
-    e.preventDefault();
-    $('.s-help').removeClass('d-none');
-    $('.s-close').addClass('d-none');
-    $('.s-help-content').html('').addClass('d-none');
-  });
-
-  $('.s-help').click(function(e){
-    e.preventDefault();
-    if($(this).attr('href') != '#') {
-      // load active style
-      $('.s-help-content').addClass('d-none');
-      $('.left, .right, .loader, #s-help').toggleClass('active');
-      $.ajax({
-        type: 'GET',
-        url: $(this).attr('href')
-      }).done(function( data ) {
-        $('.s-help-content').html(data).removeClass('d-none');
-        $('.s-close').toggleClass('d-none');
-      });
-    }else{
-      alert('Help content will show according to available menu.')
-    }
-  });
-
-  $('.subMenuItem').click(function(){
-    $('.s-help').removeClass('d-none');
-    $('.s-close, .s-help-content').addClass('d-none');
-    let get_url       = $(this).attr('href');
-    let path_array    = get_url.split('/');
-    let clean_path    = path_array[path_array.length-1].split('.');
-    let new_pathname  = '<?php echo AWB?>help.php?url='+path_array[path_array.length-2]+'/'+clean_path[0]+'.md';
-    $('.s-help').attr('href', new_pathname);
-  });
 </script>
 <?php include "chat.php" ?>
-<script type="text/javascript" src="<?php echo AWB; ?>admin_template/<?php echo $sysconf['admin_template']['theme']?>/js/modern-admin.js?v=<?php echo date('YmdHis'); ?>"></script>
+
 </body>
 </html>
